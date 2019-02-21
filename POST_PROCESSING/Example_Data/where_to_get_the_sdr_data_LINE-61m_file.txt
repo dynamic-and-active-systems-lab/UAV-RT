@@ -1,0 +1,11 @@
+The ‘Example_Data’ folder should contain both example radio and flight data records that can be fed to UAVRT_main.m. The radio data file is too large for a Github repository can be downloaded here:
+
+https://www2.nau.edu/uavrt-p/index.php/downloads/
+
+
+After downloading this and placing it in the Example Data folder, the folder should contain the following files 
+
+https://www2.nau.edu/uavrt-p/index.php/downloads/
+
+flt_data_LINE-61m.txt
+sdr_data_LINE-61m.dat
