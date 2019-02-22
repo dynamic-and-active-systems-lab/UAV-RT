@@ -41,8 +41,6 @@ gr-timesync/build$ ldconfig
 ```
 $python main_script.py
 ```
-Reference [Download Page](https://www2.nau.edu/uavrt-p/index.php/downloads/) for video tutorial
-
 note: 
   - must have flight controller (Pixhawk) plugged into companion computer on startup
   - must have necesseary system programs preinstalled reference [setup](https://www2.nau.edu/uavrt-p/index.php/docs/radiotelem/companion-computer/) for full download instructions
