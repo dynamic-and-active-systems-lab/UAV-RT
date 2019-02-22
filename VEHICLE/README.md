@@ -25,6 +25,18 @@ Navigate to the Python Folder, open pixstream_source.py and replace code
 
 Navigate to the XML code in the grc folder open timsync_pixstream_source.xml and replace code
 
+Create build in gr-timesync folder:
+
+```
+gr-timesync$ mkdir build
+gr-timesync$ cd build
+gr-timesync/build$ cmake ../
+gr-timesync/build$ make
+gr-timesync/build$ sudo make install
+gr-timesync/build$ ldconfig
+
+```
+
 ## Run Instructions for MAIN_SCRIPT
 
 ```
