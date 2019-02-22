@@ -34,7 +34,6 @@ gr-timesync/build$ cmake ../
 gr-timesync/build$ make
 gr-timesync/build$ sudo make install
 gr-timesync/build$ ldconfig
-
 ```
 
 ## Run Instructions for MAIN_SCRIPT
