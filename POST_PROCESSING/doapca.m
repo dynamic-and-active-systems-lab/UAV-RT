@@ -1,4 +1,4 @@
-function [out] = doapca(pulse_sig,pulse_yaw,pulse_waypt_num_in,strengthtype,scale,pltcntrl)
+function [out] = doapca(pulse_sig,pulse_yaw,pulse_waypt_num_in,total_waypts,strengthtype,scale,pltcntrl)
 %DOAPCA developes a bearing estimate for a series of received radio pulses
 %based on the principle component analysis method. 
 %   This function conductes a principle component analysis type bearin
@@ -20,6 +20,13 @@ function [out] = doapca(pulse_sig,pulse_yaw,pulse_waypt_num_in,strengthtype,scal
 %                       each pulse and NaNs for pulses not associated with
 %                       a waypoint. Enter [] for this variable if you want
 %                       to consider the entire dataset. 
+%   total_waypts        an integer that specifies the total number of
+%                       waypoints of this flight. This is used to ensure
+%                       the output contains the same number of elements as
+%                       the number of waypoints. max(pulse_waypt_num_in)
+%                       may be less than total_waypoints, if some waypoints
+%                       did not contain pulses. Outputs for waypoints that
+%                       don't have pulse data contain NaN
 %   strengthtype        a char array of 'power' or 'amplitude' indicating
 %                       the strength used in the PCA method should use the
 %                       signal amplitude or power. If power is used, the
@@ -47,16 +54,19 @@ function [out] = doapca(pulse_sig,pulse_yaw,pulse_waypt_num_in,strengthtype,scal
 %                       from the PCA method from 0-359 degrees with 0 being
 %                       the same as the yaw origin (typically N). w here is
 %                       the number of waypoints in the pulse_waypt_num 
-%                       list, or max(pulse_waypt_num)
+%                       list, or max(pulse_waypt_num). If waypoints were
+%                       skipped, NaN is reported for DOA_calc. 
 %   DOA_tau             a (wx1) numeric vector contain the tau values for
 %                       each bearing estimate. w here is the number of
 %                       waypoints in the pulse_waypt_num list, or
-%                       max(pulse_waypt_num)
+%                       max(pulse_waypt_num).If waypoints were
+%                       skipped, NaN is reported for DOA_tau. 
 %
 %
 %
 
-num_of_waypts = max(pulse_waypt_num_in);
+num_of_waypts = total_waypts; max(pulse_waypt_num_in);
+
 %If pulse_waypt_num_in is empty, create a vector of all ones so that the
 %entire dataset is considered for a single DOA output. If not, use the
 %groupings specified in pulse_waypt_num_in
@@ -67,9 +77,16 @@ else
     pulse_waypt_num = pulse_waypt_num_in;
 end
 
-DOA_calc = zeros(num_of_waypts,1);
-DOA_tau = zeros(num_of_waypts,1);
+%DOA_calc = zeros(num_of_waypts,1);
+%DOA_tau = zeros(num_of_waypts,1);
+%Pre allocate so that if we skip over a waypoint, the output will be NaN
+%for that waypoint
+DOA_calc = NaN(num_of_waypts,1);
+DOA_tau = NaN(num_of_waypts,1);
 
+%This is the list of waypoints that should be evaluted for DOA.
+%Eliminate the NaN values, and create a unique list
+waypts_with_pulses = unique(pulse_waypt_num_in(~isnan(pulse_waypt_num_in)));
 
 if strcmp(pltcntrl,'ploton')
     figure
@@ -79,7 +96,7 @@ if strcmp(pltcntrl,'ploton')
     lnwdth = 1;
 end
 
-for i = 1:num_of_waypts
+for i = waypts_with_pulses%1:num_of_waypts
     curr_pulses = pulse_sig(pulse_waypt_num == i);
     curr_yaws = pulse_yaw(pulse_waypt_num == i);
     
@@ -98,8 +115,8 @@ for i = 1:num_of_waypts
     angs = curr_yaws*pi/180;
     
     if length(curr_pulses)<4
-        warning('Only %i were detected - insufficient to DOA estimates.', length(curr_pulses))
-        wp(2) = 0; wp(1) = 0;tau = 0;
+        warning(['Only ',num2str(length(curr_pulses)),' pulse(s) detected at waypoint #',num2str(i),' - insufficient to make DOA estimate.'])
+        wp(2) = NaN; wp(1) = NaN;tau = NaN;
     else
 	    Pe_star_dB = [P_all_ang.*cos(angs),P_all_ang.*sin(angs)];
         n = length(Pe_star_dB);
@@ -116,8 +133,6 @@ for i = 1:num_of_waypts
     end
     if strcmp(pltcntrl,'ploton')
         subplot(ceil(num_of_waypts/3),min([3,num_of_waypts]),i)
-        %%%%%%%%%%polarplot(curr_yaws*pi/180,20*log10(curr_pulses./min(curr_pulses)),'.','Markersize',15,'Color',est_bear_color); hold on;
-        %polarplot(curr_yaws*pi/180,(curr_pulses.^2./min(curr_pulses).^2),'.','Markersize',15,'Color',est_bear_color); hold on;
         polarplot(curr_yaws*pi/180,P_all_ang,'.','Markersize',15,'Color',est_bear_color); hold on;
         set(gca,'ThetaZeroLocation','top','ThetaDir','clockwise')
 
@@ -129,22 +144,13 @@ for i = 1:num_of_waypts
             max_sig_curr_wypt = max(curr_pulses);
             min_sig_curr_wypt = min(curr_pulses);
         
-        %title(['Waypt.',num2str(i),' P_m = ',num2str(20*log10(max_sig_curr_wypt./max_sig_of_all_wypts),2),'dB'],'FontSize',8)
-        %title(['\#',num2str(i)],'FontSize',8,'Interpreter','latex')
-        
-        %%%%%%%%%%set(gca,'RLim',[0 20*log10(max_sig_curr_wypt./min_sig_curr_wypt)])% in dB above min pulse at this waypoint
-        %set(gca,'RLim',[0 (max_sig_curr_wypt.^2./min_sig_curr_wypt.^2)])% in dB above min pulse at this waypoint
         set(gca,'Fontsize',12)
-        %set(gca,'Fontsize',2)
-        %set(gca,'ThetaTickLabel',[])
         set(gca,'Thetatick',0:45:335,'Thetaticklabel',{'N','NE','E','SE','S','SW','W','NW'},'TickLabelInterpreter','tex')
-        %set(findall(gcf,'-property','FontSize'),'FontSize',12)
-        set(gca,'TickLabelInterpreter','latex')
+%        set(gca,'TickLabelInterpreter','latex')
     end
 
     DOA_calc(i)  = atan2(wp(2),wp(1));
     DOA_tau(i) = tau;
-    %DOA_R(i) = P_all_ang;
 end
 
 out{1} = 180/pi*DOA_calc;

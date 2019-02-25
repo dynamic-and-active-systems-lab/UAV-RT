@@ -15,7 +15,9 @@ function [position,intmap] = localize_cm(X,Y,T,pulse_sig,tau,tau_lim,ang_sep_lim
 %conflict with the frames used by the program calling localize. If the
 %X-North Y-East coordinate frame is used, x and y positions entered to this
 %function can simply be switched, and the output positions should also then
-%be switched. 
+%be switched. If the ang_sep_lim or the tau_lim limits are not met, the
+%function still provides a localization esitmate, but warns the user that
+%there may be significant localization error. 
 
 % INPUTS:
 %X           -    n x 1 vector of x-location where pulse_sig was measured. 
@@ -48,6 +50,13 @@ function [position,intmap] = localize_cm(X,Y,T,pulse_sig,tau,tau_lim,ang_sep_lim
 if ~isequal(numel(X),numel(Y),numel(T),numel(pulse_sig),numel(tau)) %Check to see that vectors are same length
     error('Number of elements of inputs must be equal')
 else
+   %Eliminate any that have NaN X, Y, or T values. 
+    nan_mask = ~isnan(X)&~isnan(Y)&~isnan(T);
+    X = X(nan_mask);
+    Y = Y(nan_mask);
+    T = T(nan_mask);
+    pulse_sig = pulse_sig(nan_mask);
+    tau = tau(nan_mask);
     num_bears = length(X);
 end
 
@@ -107,7 +116,19 @@ pulse_prod = pulse_sig(bcA).*pulse_sig(bcB);
 %difference between these bearings is less than the threshold. 
 T_INT_A = 180/pi*atan2(X_int-XA,Y_int-YA);
 T_INT_B = 180/pi*atan2(X_int-XB,Y_int-YB);
-clip_ang_sep = (abs(wrapTo360(T_INT_B)-wrapTo360(T_INT_A)))>ang_sep_lim;
+sep_list = (abs(wrapTo360(T_INT_B)-wrapTo360(T_INT_A)));
+clip_ang_sep = sep_list>ang_sep_lim;
+if all(~clip_ang_sep) %if all clip are zero
+    warning(['Bearing estimate threshold not met. ' ,...
+              'No location estimate generated. ',...
+              'Try separating waypoints, or decreasing threshold. ',...
+              'The [min max] angular separation of your bearings is [',...
+              num2str(min(sep_list)),', ',...
+              num2str(max(sep_list)),'] degrees. REPORTED LOCATION ESTIMATE ',...
+              'MAY HAVE SIGNIFICANT ERROR.']);
+	%Still give provide an estimate, because there is no other option
+	clip_ang_sep = ones(size(clip_ang_sep));
+end
 
 %This is a simple check to see if the bearing to the intersection point is
 %in front of or behind the waypoint. If it is in front, the theta value for
@@ -131,7 +152,17 @@ clip_front = front;
 %above the threshold. Need to filter out both the A and B lines that might
 %have had tau values below the threshold.
 clip_tau = (tau(bcA)>=tau_lim)&(tau(bcB)>=tau_lim);
-
+if sum(clip_tau)<2 %if fewer than 2 good taus...
+    warning(['Did not have sufficient tau values for least two bearings. ' ,...
+              'No location estimate generated. ',...
+              'May need better data or try decreasing tau threshold. ',...
+              'The [min max] tau of your bearings is [',...
+              num2str(min(tau)),', ',...
+              num2str(max(tau)),']. REPORTED LOCATION ESTIMATE ',...
+              'MAY HAVE SIGNIFICANT ERROR.']);
+	%Still give provide an estimate, because there is no other option
+    clip_tau = ones(size(clip_tau));
+end
 
 %Combine all the clip elements
 clip = clip_front&clip_tau&clip_ang_sep;

@@ -41,7 +41,7 @@ results_location = 'OUTPUT_FILES';
 
 %Query processing parameters from the user.
 [flt_data_flnm,flt_data_path] = uigetfile('*.txt','SELECT FLIGHT DATA RECORD');
-[sdr_data_flnm,sdr_data_path] = uigetfile('*.dat','SELECT RADIO DATA RECORD');
+[sdr_data_flnm,sdr_data_path] = uigetfile([flt_data_path,'*.dat'],'SELECT RADIO DATA RECORD');
 fltloc = [flt_data_path,flt_data_flnm];
 sdrloc = [sdr_data_path,sdr_data_flnm];
 default_output_savestring = flt_data_flnm(1:end-4);
@@ -150,7 +150,16 @@ veh_out = vehstates(pulse_times, veh_states,waypt_time);%
     %Convert pulse locations to latlon and range/bearing
     pulse_latlon = xy2latlon(latlonhome,[pulse_y,pulse_x]);
     pulse_cyl   = [hypot(pulse_y,pulse_x),wrapTo360(180/pi*atan2(pulse_y,pulse_x))];
-
+    
+    %Sometimes there may be waypoints included in num_of_waypoints where no
+    %pulses were recorded, or if there is an error with the radio, we could
+    %be missing some radio data in some of the waypoints. So from here on,
+    %we only want to consider the waypoints where we have valid radio data.
+    %This is the list of waypoints that should be evaluted for DOA.
+    %Eliminate the NaN values, and create a unique list
+    waypts_with_pulses = unique(pulse_waypt_num(~isnan(pulse_waypt_num)));
+    num_of_waypts_with_pulses = length(waypts_with_pulses);
+    
 %This code is use to find the maximum and average pulse power and amp at
 %each waypoint.
     waypt_max_pulse_pow = zeros(num_of_waypts,1);
@@ -159,23 +168,30 @@ veh_out = vehstates(pulse_times, veh_states,waypt_time);%
     waypt_avg_pulse_amp = waypt_max_pulse_pow;
 
 for i = 1:num_of_waypts %This finds the maximum pulse signal amplitude at each waypoint
-    waypt_max_pulse_pow(i) =  max(pulse_pow(pulse_waypt_num == i));
-    waypt_avg_pulse_pow(i) = mean(pulse_pow(pulse_waypt_num == i));
-    waypt_max_pulse_amp(i) =  max(pulse_amp(pulse_waypt_num == i));
-    waypt_avg_pulse_amp(i) = mean(pulse_amp(pulse_waypt_num == i));
+    if ismember(i,waypts_with_pulses)
+        waypt_max_pulse_pow(i) =  max(pulse_pow(pulse_waypt_num == i));
+        waypt_avg_pulse_pow(i) = mean(pulse_pow(pulse_waypt_num == i));
+        waypt_max_pulse_amp(i) =  max(pulse_amp(pulse_waypt_num == i));
+        waypt_avg_pulse_amp(i) = mean(pulse_amp(pulse_waypt_num == i));
+    else %If a waypoint didn't have pulses found, report NaN
+        waypt_max_pulse_pow(i) = NaN;
+        waypt_avg_pulse_pow(i) = NaN;
+        waypt_max_pulse_amp(i) = NaN;
+        waypt_avg_pulse_amp(i) = NaN;
+    end
 end
 
-if num_of_waypts~=0
+if num_of_waypts_with_pulses ~=0
     %% DOA ESTIMATION
     waitbar(4/total_steps,waitbar_fig,'Processing: Determining bearing estimates');
-    %                (Pulse Amplitudes, Pulse Yaws, Pulse waypoint number, power or amp?, scaling,plot control)
-    [doaout] = doapca(pulse_amp,pulse_yaw,pulse_waypt_num,'power','linear','noplot');%All inputs required
+    %                (Pulse Amplitudes, Pulse Yaws, Pulse waypoint number,total num of waypts, power or amp?, scaling,plot control)
+    [doaout] = doapca(pulse_amp,pulse_yaw,pulse_waypt_num,num_of_waypts,'power','linear','noplot');%All inputs required
         DOA_tau = doaout{2};                                             %Tau values of each bearing
         DOA_calc_deg_N_CW = doaout{1};                                   %DOA degree angle from N with postiive CW -i.e. a regular compas bearing.
         DOA_calc_rad_N_CW = DOA_calc_deg_N_CW*pi/180;                    %DOA radian angle from N with postiive CW -i.e. a regular compas bearing.
         DOA_calc_rad_E_CCW = wrapToPi(pi/2-wrapToPi(DOA_calc_rad_N_CW)); %DOA radian angle from E with postiive CCW -i.e. standard math angle definition
         DOA_calc_deg_E_CCW = 180*pi*DOA_calc_rad_E_CCW;                  %DOA degree angle from E with postiive CCW -i.e. standard math angle definition
-    if num_of_waypts>1
+    if num_of_waypts_with_pulses >1
     %% LOCALIZATION
     waitbar(5/total_steps,waitbar_fig,'Processing: Localizing');
     %The localization algorithms use East as X and N as Y, so we enter them in
@@ -231,7 +247,7 @@ for i = 1:length(pulse_x)
     plot3(pulse_x(i),pulse_y(i),pulse_alt(i),'o','Markersize',pulse_icon_size_matlab(i),'MarkerEdgeColor',pulse_colors_matlab(i,:)); hold on;
 end
 
-if num_of_waypts~=0
+if num_of_waypts_with_pulses ~=0
     flight_delta_dist = sqrt(range(veh_states(:,8)).^2+range(veh_states(:,9)).^2);
     vect_lengths =10*flight_delta_dist*waypt_max_pulse_pow/max(waypt_max_pulse_pow);
     
@@ -240,7 +256,7 @@ if num_of_waypts~=0
     plot(waypt(:,1),waypt(:,2),'o','MarkerEdgeColor',[1 0.9 0.9],'MarkerFaceColor',[1 0.9 0.9]);
     quiver3(waypt(:,1),waypt(:,2),waypt(:,3),vect_lengths.*cos(DOA_calc_rad_N_CW),vect_lengths.*sin(DOA_calc_rad_N_CW),zeros(size(DOA_calc_rad_N_CW)),'Color',[0.5 0.5 1])
     quiver(waypt(:,1),waypt(:,2),vect_lengths.*cos(DOA_calc_rad_N_CW),vect_lengths.*sin(DOA_calc_rad_N_CW),'Color',[0.9 0.9 1])
-    if num_of_waypts>1
+    if num_of_waypts_with_pulses >1
     %Plot the localization results
     plot(pos_xNyE_CM(1),pos_xNyE_CM(2),'bs','Markersize',10)
     plot(pos_xNyE_MLE(1),pos_xNyE_MLE(2),'b+','Markersize',10)
@@ -279,14 +295,14 @@ temp_kml_dir_name = 'temp_KML';
  folder_text_pulse = kmlfolder(folder_list_pulse,'Received Pulses');
 
  %Only execute this if there were waypoints the vehicle flew to
- if num_of_waypts~=0
+ if num_of_waypts_with_pulses ~=0
      %Waypoints
      for i = 1:num_of_waypts;waypt_name_list{i} = sprintf('WP%i',i);end
      kmlwritepoint('temp_KML/vehicle_waypts.kml',waypt_latlon(:,1),waypt_latlon(:,2),0*waypt(:,3),'AltitudeMode','relativeToGround','Icon','kml_files/logo_blue.png','Name',waypt_name_list,'IconScale',1*ones(1,num_of_waypts));
      
      %Bearing Estimates
      %Each draw distance is the distance from that waypoint to the estimated tag location
-     if num_of_waypts>1
+     if num_of_waypts_with_pulses >1
          draw_dists = sqrt((pos_xNyE_MEDIAN(1)-waypt(:,1)).^2+(pos_xNyE_MEDIAN(2)-waypt(:,2)).^2);
      else
          draw_dists = 100;%If we only have 1 bearing, make the bearing line 100 m long
@@ -294,7 +310,7 @@ temp_kml_dir_name = 'temp_KML';
      %Plot at alt of 1 m.
      kmlbearing('temp_KML/bear_lines.kml',waypt_latlon(:,1),waypt_latlon(:,2),ones(size(waypt(:,3))),DOA_calc_deg_N_CW,draw_dists,'blue',1);
      
-     if num_of_waypts>1
+     if num_of_waypts_with_pulses>1
          %Location Estimates
          kmlwritepoint('temp_KML/est_pos_cm.kml',latlon_CM(1),latlon_CM(2),'Name','CM Est.','Color',[0.5 0.5 1],'Icon','kml_files/wht-CM.png');
          kmlwritepoint('temp_KML/est_pos_mle.kml',latlon_MLE(1),latlon_MLE(2),'Name','MLE Est.','Color',[0.5 0.5 1],'Icon','kml_files/wht-MLE.png');
@@ -314,9 +330,9 @@ temp_kml_dir_name = 'temp_KML';
  end
 
  %Prepare one large char array for eventual print to kml file
-if num_of_waypts>1
+if num_of_waypts_with_pulses >1
     doc_text_pre = {flight_path_text,folder_text_est,folder_text_waypts,folder_text_bear,folder_text_pulse};
-elseif num_of_waypts==1
+elseif num_of_waypts_with_pulses ==1
     doc_text_pre = {flight_path_text,folder_text_waypts,folder_text_bear,folder_text_pulse};
 else
     doc_text_pre = {flight_path_text,folder_text_pulse};
@@ -333,12 +349,12 @@ rmdir(temp_kml_dir_name,'s') %Remove the temporary folder and it contents
 
 %% PREPARE SUMMARY FILE FROM RESULTS
 waitbar(6/total_steps,waitbar_fig,'Processing: Writing summary data file');
-if num_of_waypts>0
+if num_of_waypts_with_pulses >0
     %Waypoint matrix will include: waypt #, DOA from N, waypoint relative pulse power, waypoint lat, waypoint lon, waypoint x, waypoint y, waypoint altitude,  time start waypoint, time end waypoint
     waypt_out_mat = [(1:num_of_waypts)',DOA_calc_deg_N_CW,waypt_max_pulse_pow/max(waypt_max_pulse_pow),waypt_latlon,waypt];
     waypt_header_text = ['#  DOA(deg-N)','\t','WP RSS','\t','Lat','\t \t','Lon','\t \t ','x(m)','\t \t','y(m)','\t \t','Alt(m)','\t','WP t_0','\t \t','WP t_end \r\n ------------------------------------------------------------------------------------------------------------------------\r\n'] ;
     
-    if num_of_waypts>1
+    if num_of_waypts_with_pulses >1
     %Localiazation matrix will in clude each methods: est. dist to tag,  bearing to tag, est-lat est-lon, est-x, est-y, est-lat est-lon
     loc_out_mat_names = ['MEDIAN';'    CM';'   MLE';'   RMR';'  MEST'];
     loc_out_mat_data = [cyl_MEDIAN,  latlon_MEDIAN,  pos_xNyE_MEDIAN';...
@@ -373,13 +389,13 @@ pulse_out_mat = [(1:length(pulse_times))',pulse_times',pulse_pow',pulse_latlon(:
 %Write the output file
 fileID = fopen([results_location,'/',savestring,'-SUMMARY.txt'],'w');
 fprintf(fileID,output_header);
-if num_of_waypts>1
+if num_of_waypts_with_pulses >1
 fprintf(fileID,'LOCALIZATION RESULTS: \r\n \r\n');
 fprintf(fileID,loc_header_text);
 fprintf(fileID,'%s %6.1f \t %.1f \t %.8f \t %.8f \t %.1f \t %.1f \r\n',loc_out_mat{:});
 fprintf(fileID,'\r\n \r\n \r\n');
 end
-if num_of_waypts>0
+if num_of_waypts_with_pulses >0
 fprintf(fileID,'WAYPOINT DATA LIST: \r\n \r\n');
 fprintf(fileID,waypt_header_text);
 fprintf(fileID,'%2u %6.2f \t %2.1f \t %.8f \t %.8f \t %7.1f \t %7.1f \t %.1f \t %7.2f \t %7.2f\r\n',waypt_out_mat');

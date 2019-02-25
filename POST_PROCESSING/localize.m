@@ -41,8 +41,14 @@ max_iter = 1000;
 if ~isequal(numel(X),numel(Y),numel(T)) %Check to see that vectors are same length
     error('Number of elements of inputs must be equal')
 else
+    %Eliminate any that have NaN X, Y, or T values. 
+    nan_mask = ~isnan(X)&~isnan(Y)&~isnan(T);
+    X = X(nan_mask);
+    Y = Y(nan_mask);
+    T = T(nan_mask);
     num_bears = length(X);
 end
+
 %Standardize the shape of all the input vectors
 X = reshape(X,num_bears,1);
 Y = reshape(Y,num_bears,1);
