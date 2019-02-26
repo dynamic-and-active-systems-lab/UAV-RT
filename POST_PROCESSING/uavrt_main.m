@@ -125,6 +125,9 @@ waitbar(2/total_steps,waitbar_fig,'Processing: Filtering radio data');
 data_out = cleandata(Fs,pulse_dur,f,filt_band,SDR_raw);
     t_g      = data_out{1};
     data_abs = abs(data_out{2});
+    SDR_filt = data_out{3};
+    audiowrite([out_data_path,'/',savestring,'-AUDIO_RAW.wav'],real(SDR_raw),Fs,'Title',[sdr_data_flnm,'-raw']);
+    audiowrite([out_data_path,'/',savestring,'-AUDIO_FILT.wav'],real(SDR_filt),Fs,'Title',[sdr_data_flnm,'-filtered']);
 
 waitbar(3/total_steps,waitbar_fig,'Processing: Detecting pulses');
 %Find pulses within signal amplitude data

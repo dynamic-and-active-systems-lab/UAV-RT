@@ -40,7 +40,10 @@
 %  --> t_out    -- numeric array --> matlab.double (nx1) -- vector of times for data_out
 %  |  
 %  |
-%  --> data_out -- numeric array --> matlab.double (nx1) -- vector of complex radio data
+%  --> data_out -- numeric array --> matlab.double (nx1) -- vector of complex radio data maximums
+%  |  
+%  |
+%  --> SDR_filt -- numeric array --> matlab.double (nx1 is_complex=Ture) -- vector of complex filtered radio data
 
 
 %% Format inputs
@@ -134,6 +137,7 @@ t_g = 1/Fs_g*((0:1:length(data)-1))+(n_window/Fs*1/2);%shift by 1/2 the sampling
 
 data_out{1,1} = double(t_g);
 data_out{2,1} = double(data);
+data_out{3,1} = double(SDR_filt);
 
 
 
