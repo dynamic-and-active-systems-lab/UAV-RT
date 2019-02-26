@@ -26,7 +26,7 @@ function [] = uavrt_main()
 %pulse_rep              Expected pulse repetition rate (s)
 %filt_band              Width of filter (Hz)
 %savestring             a char array that will begin each output filename
-%results_location       place where you want the results saved. 
+%out_data_path       place where you want the results saved. 
 
 
 %OUTPUTS
@@ -36,14 +36,16 @@ function [] = uavrt_main()
 clear
 clc
 
-results_location = 'OUTPUT_FILES';
+%results_location = 'OUTPUT_FILES';
 
 
 %Query processing parameters from the user.
 [flt_data_flnm,flt_data_path] = uigetfile('*.txt','SELECT FLIGHT DATA RECORD');
 [sdr_data_flnm,sdr_data_path] = uigetfile([flt_data_path,'*.dat'],'SELECT RADIO DATA RECORD');
+[out_data_path] = uigetdir(flt_data_path,'SELECT OUTPUT FILE DIRECTORY');
 fltloc = [flt_data_path,flt_data_flnm];
 sdrloc = [sdr_data_path,sdr_data_flnm];
+
 default_output_savestring = flt_data_flnm(1:end-4);
 definput_main_params = {default_output_savestring,'48000','0.02','1.3'};
 x_main_params = inputdlg({'Enter string to use for output filenames',...
@@ -340,7 +342,7 @@ end
 
 doc_text_compile = kmlwriteprep(doc_text_pre,savestring);
 
-fid = fopen([results_location,'/',savestring,'-MAP.kml'],'wt');
+fid = fopen([out_data_path,'/',savestring,'-MAP.kml'],'wt');
 fprintf(fid, doc_text_compile);
 fclose(fid);
 rmdir(temp_kml_dir_name,'s') %Remove the temporary folder and it contents
@@ -387,7 +389,7 @@ pulse_out_mat = [(1:length(pulse_times))',pulse_times',pulse_pow',pulse_latlon(:
 
 
 %Write the output file
-fileID = fopen([results_location,'/',savestring,'-SUMMARY.txt'],'w');
+fileID = fopen([out_data_path,'/',savestring,'-SUMMARY.txt'],'w');
 fprintf(fileID,output_header);
 if num_of_waypts_with_pulses >1
 fprintf(fileID,'LOCALIZATION RESULTS: \r\n \r\n');
