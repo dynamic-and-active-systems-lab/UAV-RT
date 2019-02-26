@@ -88,7 +88,7 @@ DOA_tau = NaN(num_of_waypts,1);
 %Eliminate the NaN values, and create a unique list
 waypts_with_pulses = unique(pulse_waypt_num_in(~isnan(pulse_waypt_num_in)));
 
-if strcmp(pltcntrl,'ploton')
+if strcmp(pltcntrl,'plot')
     figure
     tru_bear_color = [1 0.3 0.3];
     est_bear_color =  [0    0.4470    0.7410];%[0.3 0.5 1];
@@ -131,7 +131,7 @@ for i = waypts_with_pulses%1:num_of_waypts
         line_scale = max(P_all_ang)/norm(wp);%the wp size changes if w1
        
     end
-    if strcmp(pltcntrl,'ploton')
+    if strcmp(pltcntrl,'plot')
         subplot(ceil(num_of_waypts/3),min([3,num_of_waypts]),i)
         polarplot(curr_yaws*pi/180,P_all_ang,'.','Markersize',15,'Color',est_bear_color); hold on;
         set(gca,'ThetaZeroLocation','top','ThetaDir','clockwise')
