@@ -44,11 +44,18 @@ if isrow(alpha_const); alpha_const = alpha_const' ;end
 %Generate a series of temporary KML files that will later be stitched
 %together. Each of these will be a single bearing line
 kml_index = 1;
+if strcmp(filename(1:end-3),'.kml')
+    error('KML bearing filename must include the file extension .kml')
+else
+    temp_bear_path = filename(1:end-4);
+end
+mkdir(temp_bear_path)
 for i = 1:num_bears
-        flnm_lst_bear{kml_index} = ['temp_bear_',num2str(kml_index),'.kml'];
+        flnm_lst_bear{kml_index} = [temp_bear_path,'/temp_bear_',num2str(kml_index),'.kml'];
         kmlwriteline(flnm_lst_bear{kml_index},[lats(kml_index) lats2(kml_index)],[lons(kml_index) lons2(kml_index)],[alts(kml_index) alts2(kml_index)],'AltitudeMode','relativeToGround','Color',color,'Name',['Bearing-',num2str(i)],'Alpha',alpha_const,'LineWidth', 1.5)
      kml_index = kml_index+1;
 end
+
 
 %Stitch all the temporary kml files together into a single character array
 text_stitched = kmlstitch(flnm_lst_bear);
@@ -59,10 +66,11 @@ fid = fopen(filename,'wt');
 fprintf(fid, text_out);
 fclose(fid);
 
-%Delete the temporary kml files
-for i = 1:length(flnm_lst_bear)
-    delete(flnm_lst_bear{i})
-end
+rmdir(temp_bear_path,'s')% remove temp directory and its contents
+% %Delete the temporary kml files
+% for i = 1:length(flnm_lst_bear)
+%     delete(flnm_lst_bear{i})
+% end
 
 
 end

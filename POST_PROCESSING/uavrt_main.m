@@ -284,27 +284,37 @@ figure(waitbar_fig);
 %% KML Generation
 
 waitbar(5/total_steps,waitbar_fig,'Processing: Writing KML output files');
-temp_kml_dir_name = 'temp_KML';
+temp_kml_dir_name = [out_data_path,'/temp_KML'];
  mkdir(temp_kml_dir_name)
  
+ flt_path_temp_path = [temp_kml_dir_name,'/flight_path.kml'];
+ pusle_pow_temp_path = [temp_kml_dir_name,'/pulse_pow.kml'];
+ veh_waypts_temp_path = [temp_kml_dir_name,'/vehicle_waypts.kml'];
+ bear_lines_temp_path = [temp_kml_dir_name,'/bear_lines.kml'];
+ est_pos_cm_temp_path = [temp_kml_dir_name,'/est_pos_cm.kml'];
+ est_pos_mle_temp_path = [temp_kml_dir_name,'/est_pos_mle.kml'];
+ est_pos_rmr_temp_path = [temp_kml_dir_name,'/est_pos_rmr.kml'];
+ est_pos_mest_temp_path = [temp_kml_dir_name,'/est_pos_mest.kml'];
+ est_pos_med_temp_path = [temp_kml_dir_name,'/est_pos_med.kml'];
+ 
  %Write the flight path to a kml file and extract the needed string data
- kmlwriteline('temp_KML/flight_path.kml',veh_states(:,6),veh_states(:,7),veh_states(:,5),'AltitudeMode','relativeToGround','Color',[0.5 0.5 1],'Name','Flight Path','Alpha',1);
- flight_path_text = kmlextract('temp_KML/flight_path.kml'); 
+ kmlwriteline(flt_path_temp_path,veh_states(:,6),veh_states(:,7),veh_states(:,5),'AltitudeMode','relativeToGround','Color',[0.5 0.5 1],'Name','Flight Path','Alpha',1);
+ flight_path_text = kmlextract(flt_path_temp_path); 
  %Write the pulses to a kml file and encapsulate in a folder
  for i = 1:num_of_pulses;pulse_blank_labels{i} = ' ';end
  pulse_icon_size = 3*pulse_pow/max(pulse_pow); %Range is 2*(0-1);
  pusle_colors_10 = jet(10);
  pulse_colors = pusle_colors_10(round(1+9*round(pulse_amp/max(pulse_amp),1)),:);
- kmlwritepoint('temp_KML/pulse_pow.kml',pulse_latlon(:,1),pulse_latlon(:,2),pulse_alt,'Name',pulse_blank_labels,'Color',pulse_colors,'Icon','kml_files/wht-glo.png','Iconscale',pulse_icon_size,'AltitudeMode','relativeToGround');
+ kmlwritepoint(pusle_pow_temp_path,pulse_latlon(:,1),pulse_latlon(:,2),pulse_alt,'Name',pulse_blank_labels,'Color',pulse_colors,'Icon','kml_files/wht-glo.png','Iconscale',pulse_icon_size,'AltitudeMode','relativeToGround');
  %Encapsulate pulses into a folder for the eventual kml file
- folder_list_pulse = {'temp_KML/pulse_pow.kml'};
+ folder_list_pulse = {pusle_pow_temp_path};
  folder_text_pulse = kmlfolder(folder_list_pulse,'Received Pulses');
 
  %Only execute this if there were waypoints the vehicle flew to
  if num_of_waypts_with_pulses ~=0
      %Waypoints
      for i = 1:num_of_waypts;waypt_name_list{i} = sprintf('WP%i',i);end
-     kmlwritepoint('temp_KML/vehicle_waypts.kml',waypt_latlon(:,1),waypt_latlon(:,2),0*waypt(:,3),'AltitudeMode','relativeToGround','Icon','kml_files/logo_blue.png','Name',waypt_name_list,'IconScale',1*ones(1,num_of_waypts));
+     kmlwritepoint(veh_waypts_temp_path,waypt_latlon(:,1),waypt_latlon(:,2),0*waypt(:,3),'AltitudeMode','relativeToGround','Icon','kml_files/logo_blue.png','Name',waypt_name_list,'IconScale',1*ones(1,num_of_waypts));
      
      %Bearing Estimates
      %Each draw distance is the distance from that waypoint to the estimated tag location
@@ -314,24 +324,24 @@ temp_kml_dir_name = 'temp_KML';
          draw_dists = 100;%If we only have 1 bearing, make the bearing line 100 m long
      end
      %Plot at alt of 1 m.
-     kmlbearing('temp_KML/bear_lines.kml',waypt_latlon(:,1),waypt_latlon(:,2),ones(size(waypt(:,3))),DOA_calc_deg_N_CW,draw_dists,'blue',1);
+     kmlbearing(bear_lines_temp_path,waypt_latlon(:,1),waypt_latlon(:,2),ones(size(waypt(:,3))),DOA_calc_deg_N_CW,draw_dists,'blue',1);
      
      if num_of_waypts_with_pulses>1
          %Location Estimates
-         kmlwritepoint('temp_KML/est_pos_cm.kml',latlon_CM(1),latlon_CM(2),'Name','CM Est.','Color',[0.5 0.5 1],'Icon','kml_files/wht-CM.png');
-         kmlwritepoint('temp_KML/est_pos_mle.kml',latlon_MLE(1),latlon_MLE(2),'Name','MLE Est.','Color',[0.5 0.5 1],'Icon','kml_files/wht-MLE.png');
-         kmlwritepoint('temp_KML/est_pos_rmr.kml',latlon_RMR(1),latlon_RMR(2),'Name','RMR Est.','Color',[0.5 0.5 1],'Icon','kml_files/wht-RMR.png');
-         kmlwritepoint('temp_KML/est_pos_mest.kml',latlon_MEST(1),latlon_MEST(2),'Name','M-Est.','Color',[0.5 0.5 1],'Icon','kml_files/wht-MEST.png');
-         kmlwritepoint('temp_KML/est_pos_med.kml',latlon_MEDIAN(1),latlon_MEDIAN(2),'Name','Median Est.','Color',[0.5 0.5 1],'Icon','kml_files/wht-MED.png');
+         kmlwritepoint(est_pos_cm_temp_path,latlon_CM(1),latlon_CM(2),'Name','CM Est.','Color',[0.5 0.5 1],'Icon','kml_files/wht-CM.png');
+         kmlwritepoint(est_pos_mle_temp_path,latlon_MLE(1),latlon_MLE(2),'Name','MLE Est.','Color',[0.5 0.5 1],'Icon','kml_files/wht-MLE.png');
+         kmlwritepoint(est_pos_rmr_temp_path,latlon_RMR(1),latlon_RMR(2),'Name','RMR Est.','Color',[0.5 0.5 1],'Icon','kml_files/wht-RMR.png');
+         kmlwritepoint(est_pos_mest_temp_path,latlon_MEST(1),latlon_MEST(2),'Name','M-Est.','Color',[0.5 0.5 1],'Icon','kml_files/wht-MEST.png');
+         kmlwritepoint(est_pos_med_temp_path,latlon_MEDIAN(1),latlon_MEDIAN(2),'Name','Median Est.','Color',[0.5 0.5 1],'Icon','kml_files/wht-MED.png');
          
          %Encapsulate each group into folders for the eventual kml file
-         folder_list_est_pos = {'temp_KML/est_pos_cm.kml','temp_KML/est_pos_mle.kml','temp_KML/est_pos_rmr.kml','temp_KML/est_pos_mest.kml','temp_KML/est_pos_med.kml'};
+         folder_list_est_pos = {est_pos_cm_temp_path,est_pos_mle_temp_path,est_pos_rmr_temp_path,est_pos_mest_temp_path,est_pos_med_temp_path};
          folder_text_est = kmlfolder(folder_list_est_pos,'Location Estimates');
      end
      %Encapsulate each group into folders for the eventual kml file
-     folder_list_waypts = {'temp_KML/vehicle_waypts.kml'};
+     folder_list_waypts = {veh_waypts_temp_path};
      folder_text_waypts = kmlfolder(folder_list_waypts,'Waypoints');
-     folder_list_bear = {'temp_KML/bear_lines.kml'};
+     folder_list_bear = {bear_lines_temp_path};
      folder_text_bear = kmlfolder(folder_list_bear,'Bearings');    
  end
 
