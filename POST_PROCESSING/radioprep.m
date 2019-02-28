@@ -55,7 +55,7 @@ p = inputParser;
 
 default_fs = 48000;
 default_pulse_dur = 0.02; %20 ms default pulse duration
-default_filt_band = 0; %160 Hz filter band
+default_filt_band = 160; %160 Hz filter band
 default_plot = 'none';%Don't plot by default
 default_t_bounds = 0; %Set to zero so we can use the bounds of the time vector later if nothing is entered. 
 default_f_max = 1000; %Set to zero so we can use the bounds of the time vector later if nothing is entered. 

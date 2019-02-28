@@ -139,7 +139,8 @@ pulse_data = pulsefind(1/pulse_dur,pulse_dur,pulse_rep,data_abs);
     pulse_amp   = pulse_data{2}(valid_pulse_msk);
     pulse_pow   = pulse_data{2}(valid_pulse_msk).^2;%power
 	num_of_pulses = length(pulse_times);
-%figure;plot(pulse_times,pulse_amp,'.','Markersize',10); hold on;plot(pulse_times,pulse_amp);xlabel('Time(s)');ylabel('Pulse amplitude');
+%figure;plot(1/Fs*((1:length(SDR_filt))-1),abs(SDR_filt))
+%hold on;plot(pulse_times,pulse_amp,'.','Markersize',10); hold on;plot(pulse_times,pulse_amp);xlabel('Time(s)');ylabel('Pulse amplitude');
 
 
 %% FLIGHT DATA AND RADIO DATA FUSION
