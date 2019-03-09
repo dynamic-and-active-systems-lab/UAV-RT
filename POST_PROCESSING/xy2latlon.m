@@ -1,5 +1,5 @@
 function [latlon] = xy2latlon(latlon_0,xy)
-%function [lat,lon] = xy2latlon(lat_0,lon_0,x,y)
+%function [lat,lon] = xy2latlon(latlon_0,xy)
 %XY2LATLON Converts a series of x-y positions to lats and lons based on the
 %given zero position in lat lon
 
