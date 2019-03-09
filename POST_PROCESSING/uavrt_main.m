@@ -356,6 +356,13 @@ end
 
 doc_text_compile = kmlwriteprep(doc_text_pre,savestring);
 
+if ispc
+    %PCs use backslashes for file paths, but these have to be modified to
+    %be printed correctly by fprintf. See 'Special Characters' in :
+    %https://www.mathworks.com/help/matlab/matlab_prog/formatting-strings.html
+     doc_text_compile = strrep(doc_text_compile,'\','\\');
+end
+
 fid = fopen([out_data_path,'/',savestring,'-MAP.kml'],'wt');
 fprintf(fid, doc_text_compile);
 fclose(fid);
