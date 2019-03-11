@@ -191,7 +191,7 @@ if num_of_waypts_with_pulses ~=0
     %% DOA ESTIMATION
     waitbar(4/total_steps,waitbar_fig,'Processing: Determining bearing estimates');
     %                (Pulse Amplitudes, Pulse Yaws, Pulse waypoint number,total num of waypts, power or amp?, scaling,plot control)
-    [doaout] = doapca(pulse_amp,pulse_yaw,pulse_waypt_num,num_of_waypts,'power','linear','noplot');%All inputs required
+    [doaout] = doapca(pulse_amp,pulse_yaw,pulse_waypt_num,num_of_waypts,'amplitude','log','noplot');%All inputs required
         DOA_tau = doaout{2};                                             %Tau values of each bearing
         DOA_calc_deg_N_CW = doaout{1};                                   %DOA degree angle from N with postiive CW -i.e. a regular compas bearing.
         DOA_calc_rad_N_CW = DOA_calc_deg_N_CW*pi/180;                    %DOA radian angle from N with postiive CW -i.e. a regular compas bearing.
@@ -375,7 +375,7 @@ waitbar(6/total_steps,waitbar_fig,'Processing: Writing summary data file');
 if num_of_waypts_with_pulses >0
     %Waypoint matrix will include: waypt #, DOA from N, waypoint relative pulse power, waypoint lat, waypoint lon, waypoint x, waypoint y, waypoint altitude,  time start waypoint, time end waypoint
     waypt_out_mat = [(1:num_of_waypts)',DOA_calc_deg_N_CW,waypt_max_pulse_pow/max(waypt_max_pulse_pow),waypt_latlon,waypt];
-    waypt_header_text = ['#  DOA(deg-N)','\t','WP RSS','\t','Lat','\t \t','Lon','\t \t ','x(m)','\t \t','y(m)','\t \t','Alt(m)','\t','WP t_0','\t \t','WP t_end \r\n ------------------------------------------------------------------------------------------------------------------------\r\n'] ;
+    waypt_header_text = ['#','\t','DOA','\t','Rel.RSS','\t','Lat','\t\t','Lon','\t\t ','x(m)','\t','y(m)','\t','Alt(m)','\t','WP-t_0','\t','WP-t_end \r\n  ------------------------------------------------------------------------------------------------\r\n'] ;
     
     if num_of_waypts_with_pulses >1
     %Localiazation matrix will in clude each methods: est. dist to tag,  bearing to tag, est-lat est-lon, est-x, est-y, est-lat est-lon
@@ -386,7 +386,7 @@ if num_of_waypts_with_pulses >0
         cyl_RMR,  latlon_RMR,  pos_xNyE_RMR';...
         cyl_MEST, latlon_MEST, pos_xNyE_MEST'];
     loc_out_mat = [cellstr(loc_out_mat_names), num2cell(loc_out_mat_data)].';
-    loc_header_text = ['Method  Dist.(m) Deg-N','\t','Lat','\t \t','Lon','\t \t','x(m)','\t','y(m)','\r\n -----------------------------------------------------------------------\r\n'] ;
+    loc_header_text = ['Method','\t','Rng.(m)','\t','Brng','\t','Lat','\t\t','Lon','\t\t','x(m)','\t','y(m)','\r\n -----------------------------------------------------------------------\r\n'] ;
     end
 end
 
@@ -395,6 +395,7 @@ strongest_pulse_index = find(pulse_amp==max(pulse_amp(2:end-1)));
 output_header =  ['Results of input files:','\n',...
     'Flight data: ',flt_data_flnm,'\n',...
     'Radio data: ',sdr_data_flnm,'\n',...
+    'Note: All bearings angles are in degrees from true North, positive CW (standard compass bearing)\n',...
     '\n',...
     '\n',...
     '\n',...
@@ -402,11 +403,11 @@ output_header =  ['Results of input files:','\n',...
     num2str(num_of_pulses),' radio pulses found at ',num2str(f),' Hz from center frequency','\n',...
     'Expected approximately ', num2str(round((veh_states(end,1) - veh_states(1,1))/pulse_rep)),' pulses for a ',num2str((veh_states(end,1) - veh_states(1,1))/60),' minute flight.','\n',...
     'Waypoints found: ',num2str(num_of_waypts),'\n',...
-    'Strongest pulse found at [x,y] = \t',num2str(pulse_x(strongest_pulse_index)),'\t',num2str(pulse_y(strongest_pulse_index)),'\n',...%ignore the first pulse becasue sometimes the first pulse is erroneous as the SDR is getting started up. The first second or so of data should typically be ignored.
-    '\t \t \t [lat lon] = \t',num2str(pulse_latlon(strongest_pulse_index,1),'%.8f'),'\t',num2str(pulse_latlon(strongest_pulse_index,2),'%.8f'),' \n',...
-    '\t \t \t [rng(m) bear(deg-N)] = \t',num2str([pulse_cyl(strongest_pulse_index,1),pulse_cyl(strongest_pulse_index,2)]),' \n'];
+    'Strongest pulse found at [x,y] = \t\t',num2str(pulse_x(strongest_pulse_index)),'\t',num2str(pulse_y(strongest_pulse_index)),'\n',...%ignore the first pulse becasue sometimes the first pulse is erroneous as the SDR is getting started up. The first second or so of data should typically be ignored.
+    '\t \t \t [lat lon] = \t\t',num2str(pulse_latlon(strongest_pulse_index,1),'%.8f'),'\t',num2str(pulse_latlon(strongest_pulse_index,2),'%.8f'),' \n',...
+    '\t \t \t [rng(m) bear] = \t',[num2str(pulse_cyl(strongest_pulse_index,1)),'\t\t',num2str(pulse_cyl(strongest_pulse_index,2))],' \n'];
 
-pulse_header_text = ['#','\t','Time(s)','\t','Pow-mW','\t \t','Lat','\t \t','Lon','\t \t ','x(m)','\t \t','y(m)','\t \t','Alt(m)',' \r\n ------------------------------------------------------------------------------------------------------------------------\r\n'] ;
+pulse_header_text = ['    #','\t','Time(s)','\t','Pow-mW','\t\t','Lat','\t\t','Lon','\t\t','x(m)','\t','y(m)','\t','Alt(m)','\r\n  ------------------------------------------------------------------------------------------------\r\n'] ;
 pulse_out_mat = [(1:length(pulse_times))',pulse_times',pulse_pow',pulse_latlon(:,1),pulse_latlon(:,2),pulse_x,pulse_y,pulse_alt];
 
 
@@ -416,18 +417,18 @@ fprintf(fileID,output_header);
 if num_of_waypts_with_pulses >1
 fprintf(fileID,'LOCALIZATION RESULTS: \r\n \r\n');
 fprintf(fileID,loc_header_text);
-fprintf(fileID,'%s %6.1f \t %.1f \t %.8f \t %.8f \t %.1f \t %.1f \r\n',loc_out_mat{:});
+fprintf(fileID,['%s','\t','%6.1f','\t','%.1f','\t','%.8f','\t','%.8f','\t','%.1f','\t','%.1f\r\n'],loc_out_mat{:});
 fprintf(fileID,'\r\n \r\n \r\n');
 end
 if num_of_waypts_with_pulses >0
 fprintf(fileID,'WAYPOINT DATA LIST: \r\n \r\n');
 fprintf(fileID,waypt_header_text);
-fprintf(fileID,'%2u %6.2f \t %2.1f \t %.8f \t %.8f \t %7.1f \t %7.1f \t %.1f \t %7.2f \t %7.2f\r\n',waypt_out_mat');
+fprintf(fileID,['%2u','\t','%6.2f','\t','%2.1f','\t','%.8f','\t','%.8f','\t','%7.1f','\t','%7.1f','\t','%.1f','\t','%7.2f','\t','%7.2f\r\n'],waypt_out_mat');
 end
 fprintf(fileID,'\r\n \r\n \r\n');
 fprintf(fileID,'RECEIVED PULSE DATA LIST: \r\n \r\n');
 fprintf(fileID,pulse_header_text);
-fprintf(fileID,'%5u %7.2f \t %4.2e \t %.8f \t %.8f \t %7.1f \t %7.1f \t %.1f\r\n',pulse_out_mat');
+fprintf(fileID,['%5u','\t','%7.2f','\t','%4.2e','\t','%.8f','\t','%.8f','\t','%7.1f','\t','%7.1f','\t','%.1f\r\n'],pulse_out_mat');
 fclose(fileID);
 
 waitbar(7/total_steps,waitbar_fig,'Processing: Complete');
