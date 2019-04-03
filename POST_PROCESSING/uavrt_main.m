@@ -104,7 +104,7 @@ waitbar_fig = waitbar(0/total_steps,'Processing: Flight data');
 
 %To consider only a portion of the record, you only need to change the time
 %selection in this function. 
-[veh_states,waypt,latlonhome] = flightprep(fltloc,'all','noplot','waypt_time',waypt_dwell_time);%'plot',1 'waypt_time',[80 87],[40 60]
+[veh_states,waypt,latlonhome] = flightprep(fltloc,'all','plot','waypt_time',waypt_dwell_time);%'plot',1 'waypt_time',[80 87],[40 60]
     waypt_time = waypt(:,end-1:end);%Grab the last two columns to create a more readable code with waypt_times [start end] for each waypoint (in the rows)
     num_of_waypts = size(waypt,1);
     %Waypoints in lat/lon

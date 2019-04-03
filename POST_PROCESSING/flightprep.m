@@ -43,6 +43,8 @@ function [a_sum, waypt, home] = flightprep(data_filename,varargin)
 %   'waypt_alt'         This is a vector of where altitudes AGL of waypoint 
 %                       definitions. Waypoints considered withing +/-10% of
 %                       these altitudes. If not entered max alt is used. 
+%   'axis_handles'      Handle of axis where data should be plotted. If
+%                       empty, function will create a new figure. 
 
 
 
@@ -103,11 +105,14 @@ default_t_bounds = 'all'; %Set to zero so we can use the bounds of the time vect
 default_waypt_dwell = 'auto';
 default_waypt_alt = NaN;%Set to Nan. We'll catch this later and enter default values from the data record after it is loaded.
 default_plot = 'noplot';%Don't plot by default
+default_axis = [];   %Create empty variable for figure handle. 
+    
 
 %This checks to see if the time entered is either 'all' or an array of 1x2
 %and that time is increasing. 
 checktime = @(x) strcmp(x,'all')||(isnumeric(x) && size(x,1)==1 && size(x,2)==2 && x(2)>x(1));
 checkdwell = @(x) strcmp(x,'auto')||(isnumeric(x) && size(x,1)==1 && size(x,2)==2 && x(2)>x(1));
+allhandle = @(x) all(ishandle(x))||isempty(x); %Check all array elements are handles or is empty for default case
 
 addRequired(p,'file_location',@ischar);
 addOptional(p,'timeselect',default_t_bounds,checktime);
@@ -117,6 +122,7 @@ addParameter(p,'fs',default_fs,@isnumeric);
 addParameter(p,'waypt_vel',default_v_thresh_at_wypt,@isnumeric);
 addParameter(p,'waypt_time',default_waypt_dwell,checkdwell);
 addParameter(p,'waypt_alt_defs',default_waypt_alt,@isnumeric);
+addParameter(p,'axis_handles',default_axis,allhandle);%If array, all must be a handle
 
 
 parse(p,data_filename,varargin{:})
@@ -130,7 +136,18 @@ t_bounds = p.Results.timeselect; %This could be a string 'all' or the bounds of 
 waypt_dwell = p.Results.waypt_time;
 waypt_alt = p.Results.waypt_alt_defs;
 plot_control =  p.Results.plot;
+ax2plot =  p.Results.axis_handles;
 
+%% Get plot axes ready
+if strcmp(plot_control,'plot')
+    if isempty(ax2plot)
+        figure;
+        subplot(2,1,1) %plot the x-y trac
+        ax2plot(1) = gca;
+        subplot(2,1,2) %plot the x-y trac
+        ax2plot(2) = gca;
+    end
+end       
 
 %% Read Flight Data
 A_telem = tdfread(telemfile);
@@ -278,21 +295,22 @@ end
 % Create a plot of the velocity, altitude, and waypoint selects if
 % requested
 if strcmp(plot_control,'plot')     
-     figure; 
-     subplot(2,1,1)
-     plot(time(1:end-1),V_smooth/max(V_smooth));hold on; 
-     plot(time,alt/max(alt));
+     %figure; 
+     %subplot(2,1,1)
+     %axes(ax2plot)
+     plot(ax2plot(1),time(1:end-1),V_smooth/max(V_smooth));hold(ax2plot(1),'on'); 
+     plot(ax2plot(1),time,alt/max(alt));
      legend_strings{1} = ['Normalized smoothed vel. (max=',num2str(max(V_smooth)),'m/s)'];
      legend_strings{2} = ['Normalized smoothed alt. (max=',num2str(max(alt)),'m/s)'];
      waypt_hand = zeros(1,length(waypt_in_ind));
      for i = 1:length(waypt_in_ind)
          %save the handles so we can get the colors later to stay
          %consistent. 
-         waypt_hand(i) = plot(time(waypt_in_ind(i):waypt_out_ind(i)),zeros(length(waypt_in_ind(i):waypt_out_ind(i)),1),'.');hold on
+         waypt_hand(i) = plot(ax2plot(1),time(waypt_in_ind(i):waypt_out_ind(i)),zeros(length(waypt_in_ind(i):waypt_out_ind(i)),1),'.');hold(ax2plot(1),'on');
          legend_strings{i+2} = ['Waypt #',num2str(i),' here'];
      end
-     xlabel('Time (s)')
-     legend(legend_strings)
+     xlabel(ax2plot(1),'Time (s)')
+     legend(ax2plot(1),legend_strings)
 end
 
 %This block create the waypoint summary list matrix  
@@ -317,30 +335,30 @@ a_sum(:,11) = msk_at_waypt;%send out the logic of being at alt. This may be usef
 %projection.
 if  strcmp(plot_control,'plot')      
     %figure
-    subplot(2,1,2) %plot the x-y trac
-    plot3(a_sum(:,8),a_sum(:,9), a_sum(:,5),'Color',[0 0 1]); hold on
-    plot(a_sum(:,8),a_sum(:,9),'Color',[0.5 0.5 1]); hold on
+    %subplot(2,1,2) %plot the x-y trac
+    plot3(ax2plot(2),a_sum(:,8),a_sum(:,9), a_sum(:,5),'Color',[0 0 1]);hold(ax2plot(2),'on')
+    plot(ax2plot(2),a_sum(:,8),a_sum(:,9),'Color',[0.5 0.5 1]); 
     
     %Plot the 
-    plot3(a_sum(find(msk_at_waypt_2),8),a_sum(find(msk_at_waypt_2),9),a_sum(find(msk_at_waypt_2),5),'o','MarkerEdgeColor',[1 0 0],'MarkerFaceColor',[1 0 0]);
-    plot(a_sum(find(msk_at_waypt_2),8),a_sum(find(msk_at_waypt_2),9),'o','MarkerEdgeColor',[1 0.5 0.5],'MarkerFaceColor',[1 0.5 0.5]);
+    plot3(ax2plot(2),a_sum(find(msk_at_waypt_2),8),a_sum(find(msk_at_waypt_2),9),a_sum(find(msk_at_waypt_2),5),'o','MarkerEdgeColor',[1 0 0],'MarkerFaceColor',[1 0 0]);
+    plot(ax2plot(2),a_sum(find(msk_at_waypt_2),8),a_sum(find(msk_at_waypt_2),9),'o','MarkerEdgeColor',[1 0.5 0.5],'MarkerFaceColor',[1 0.5 0.5]);
     
     the_waypt_colors = zeros(length(waypt_in_ind),3);%Preallocate array of the colors previous used for waypoint plotting
     the_waypt_colors_lighter = the_waypt_colors;
     for i = 1:length(waypt_in_ind)
         the_waypt_colors(i,:) = get(waypt_hand(i),'Color');
         the_waypt_colors_lighter(i,:) = the_waypt_colors(i,:) + ([1 1 1]-the_waypt_colors(i,:))*0.5; %Make 50% closer to white, in the same tone. 
-        plot3(a_sum(waypt_in_ind(i):waypt_out_ind(i),8),a_sum(waypt_in_ind(i):waypt_out_ind(i),9),a_sum(waypt_in_ind(i):waypt_out_ind(i),5),'o','MarkerEdgeColor',the_waypt_colors(i,:),'MarkerFaceColor',the_waypt_colors(i,:));
-        plot(a_sum(waypt_in_ind(i):waypt_out_ind(i),8),a_sum(waypt_in_ind(i):waypt_out_ind(i),9),'o','MarkerEdgeColor',the_waypt_colors_lighter(i,:),'MarkerFaceColor',the_waypt_colors_lighter(i,:));
+        plot3(ax2plot(2),a_sum(waypt_in_ind(i):waypt_out_ind(i),8),a_sum(waypt_in_ind(i):waypt_out_ind(i),9),a_sum(waypt_in_ind(i):waypt_out_ind(i),5),'o','MarkerEdgeColor',the_waypt_colors(i,:),'MarkerFaceColor',the_waypt_colors(i,:));
+        plot(ax2plot(2),a_sum(waypt_in_ind(i):waypt_out_ind(i),8),a_sum(waypt_in_ind(i):waypt_out_ind(i),9),'o','MarkerEdgeColor',the_waypt_colors_lighter(i,:),'MarkerFaceColor',the_waypt_colors_lighter(i,:));
      end
 
-    xlabel('X position North+ from home (m)')
-    ylabel('Y position East+ from home (m)')
-    zlabel('Alt. AGL from home (m)')
+    xlabel(ax2plot(2),'X position North+ from home (m)')
+    ylabel(ax2plot(2),'Y position East+ from home (m)')
+    zlabel(ax2plot(2),'Alt. AGL from home (m)')
     %set(gca,'View',[90 90],'xdir','reverse')
-    set(gca,'View', [75 30],'xdir','reverse')
-    axis equal
-    grid on
+    set(ax2plot(2),'View', [75 30],'xdir','reverse')
+    axis(ax2plot(2),'equal')
+    grid(ax2plot(2),'on')
 end
 
  home = 180/pi*[lat_home, lon_home];%In degrees
