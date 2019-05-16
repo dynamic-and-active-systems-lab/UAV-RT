@@ -1,3 +1,4 @@
+
 function [out] = radioprep(data_filename,varargin)
 %RADIO_PREP reads in a IQ data .dat file produced by GNU radio and finds
 %the frequency of pulses within that radio data if they are below 1kHz
@@ -20,7 +21,7 @@ function [out] = radioprep(data_filename,varargin)
 %                       considered at a waypoint. Default is 0.5 m/s if
 %                       not entered.
 %   'timeselect'        [t_start t_end] start time and end time that you
-%                       want to considere measured from the start of the 
+%                       want to consider, measured from the start of the 
 %                       record. This doesn't change the length of the
 %                       output, only the region overwhich you want to use
 %                       to conduct the FFT looking for peaks
@@ -34,6 +35,12 @@ function [out] = radioprep(data_filename,varargin)
 %                       is turned on. 
 %   'fmax'              The maximum frequency from base band where tag
 %                       frerquency may be expected. Default is 1 kHz
+%   'axis_handles'      Handle of axis where data should be plotted. If
+%                       empty, function will create a new figure. If
+%                       plotting both, the FFT should be the first handle
+%                       and spectrogram axes should be the second. ie. 
+%                        axis_handles = [ax_fft, ax_spectro];
+
 
 %                         
 %Outputs:
@@ -59,8 +66,10 @@ default_filt_band = 160; %160 Hz filter band
 default_plot = 'none';%Don't plot by default
 default_t_bounds = 0; %Set to zero so we can use the bounds of the time vector later if nothing is entered. 
 default_f_max = 1000; %Set to zero so we can use the bounds of the time vector later if nothing is entered. 
+default_axis = [];   %Create empty variable for figure handle. 
 
 checkplot = @(x) any(validatestring(x,{'fft','spectro','both','none'}));
+allhandle = @(x) all(ishandle(x))||isempty(x); %Check all array elements are handles or is empty for default case
 
 %Required inputs
 addRequired(p,'file_location',@ischar);
@@ -73,7 +82,7 @@ addOptional(p,'fmax',default_f_max,@isnumeric);
 %Not required but must be spelled out like .....'timeselect',[10 30]) if used
 addParameter(p,'plot',default_plot,checkplot);
 addParameter(p,'filterband',default_filt_band,@isnumeric);
-
+addParameter(p,'axis_handles',default_axis,allhandle);%If array, all must be a handle
 
 
 parse(p,data_filename,varargin{:})
@@ -95,6 +104,53 @@ t_bounds = p.Results.timeselect;
 filt_band = p.Results.filterband;
 plot_type =  p.Results.plot;
 f_max =  p.Results.fmax;
+ax2plot =  p.Results.axis_handles;
+
+%% Get plot axes ready
+%Don't need to do anything if 
+if strcmp(plot_type,'both')
+    if isempty(ax2plot)%Create the 2 figures and get the axes handles for later
+        ax2plot = gobjects(1,2);%Create the axes array for population later
+        figure;
+        ax2plot(1) = gca;
+        figure;
+        ax2plot(2) = gca;
+    else
+        if length(ax2plot)~=2
+            error('Two axis handles needed if plotting both.')
+        end
+    end
+elseif strcmp(plot_type,'fft')
+    if isempty(ax2plot)%Create the 1 figures and get the axes handles for later
+        ax2plot = gobjects(1,2);%Create the axes array for population later
+        figure;
+        ax2plot(1) = gca;
+    else
+        if length(ax2plot)~=1
+            error('Only one axis handle needed.')
+        else %If they passed only one handle, but it in the right place in the ax2plot array
+            ax2plot_hold = gobjects(1,2);%Create the axes array for population later
+            ax2plot_hold(1) = ax2plot;
+            ax2plot = ax2plot_hold;
+        end
+    end
+elseif strcmp(plot_type,'spectro')
+    if isempty(ax2plot)%Create the 1 figures and get the axes handles for later
+        ax2plot = gobjects(1,2);%Create the axes array for population later
+        figure;
+        ax2plot(1) = [];
+        ax2plot(2) = gca;
+    else
+        if length(ax2plot)~=1
+            error('Only one axis handle needed.')
+        else
+            ax2plot_hold = gobjects(1,2);%Create the axes array for population later
+            ax2plot_hold(2) = ax2plot;    
+            ax2plot = ax2plot_hold;
+        end
+    end
+    
+end    
 
 %% Begin computation
 
@@ -140,7 +196,10 @@ if strcmp(plot_type,'spectro')||strcmp(plot_type,'both') == 1
   %[s_spec_2,f_spec_2,t_spec_2] = spectrogram(SDR_raw,pulse_n,0,1:10:10000,Fs);
   %[s_spec_3,f_spec_3,t_spec_3] = spectrogram(SDR_raw,pulse_rep_n*2,0,1:10:10000,Fs);
   % figure; surf(t_spec,f_spec,abs(s_spec),'Edgecolor','none');xlabel('Time(s)'); ylabel('Frequency (Hz)')
-  figure; surf(t_spec,f_spec,10*log10(abs(s_spec)),'Edgecolor','none');xlabel('Time(s)'); ylabel('Frequency (Hz)')
+  surf(ax2plot(2),t_spec,f_spec,10*log10(abs(s_spec)),'Edgecolor','none');
+  xlabel(ax2plot(2),'Time(s)'); 
+  ylabel(ax2plot(2),'Frequency (Hz)')
+  view(ax2plot(2),0,90)
 end
 
 %% SINGLE SIDED SPECTRUM
@@ -177,40 +236,40 @@ end
  
 
  if strcmp(plot_type,'fft')||strcmp(plot_type,'both') == 1
-     figure
-     subplot(3,1,1)
-     t = ((0:length(SDR_raw)-1)/Fs)';
-     plot(t(inds_select),real(the_data));hold on
-     plot(t(inds_select),imag(the_data));     
-     title('IQ data in time domain')
-     xlabel('time (s)')
-     ylabel('IQ amplitude')
-     
-     subplot(3,1,2)
-     plot(freqs_1Hz,P1_1Hz)
-     title('Double-Sided Amplitude Spectrum of X(t)')
-     xlabel('f (Hz)')
-     ylabel('|P1(f)|')
-	 set(gca,'ylim',[0 1.2*max_pow_val])
-     hold on
-     amp_range = get(gca,'ylim');hold on;
-     fill([f-filt_band/2,f-filt_band/2,f+filt_band/2,f+filt_band/2],[amp_range flip(amp_range)],[1 0.3 0.3],'Facealpha',0.1,'Edgecolor','none')
-     plot(freqs_1Hz_sub_range(ind_max_pow),max_pow_val,'r.','Markersize',10)
-	 legend('Amplitude spectrum','Selected frequency')
-
-     
-     subplot(3,1,3)
-     plot(freqs_1Hz,P1_1Hz)
-     title(['Double-Sided Amplitude Spectrum of X(t) Zoomed to \pm',num2str(-f_max),'Hz'])
-     xlabel('f (Hz)')
-     ylabel('|P1(f)|')
-     set(gca,'xlim',[-f_max f_max])
-     set(gca,'ylim',[0 1.2*max_pow_val])
-     hold on
-     amp_range = get(gca,'ylim');hold on;
-     fill([f-filt_band/2,f-filt_band/2,f+filt_band/2,f+filt_band/2],[amp_range flip(amp_range)],[1 0.3 0.3],'Facealpha',0.1,'Edgecolor','none')
-     plot(freqs_1Hz_sub_range(ind_max_pow),max_pow_val,'r.','Markersize',10)
-     legend('Amplitude spectrum','Selected frequency')
+     %figure
+%      subplot(3,1,1)
+%      t = ((0:length(SDR_raw)-1)/Fs)';
+%      plot(t(inds_select),real(the_data));hold on
+%      plot(t(inds_select),imag(the_data));     
+%      title('IQ data in time domain')
+%      xlabel('time (s)')
+%      ylabel('IQ amplitude')
+%      
+%      subplot(3,1,2)
+%      plot(freqs_1Hz,P1_1Hz)
+%      title('Double-Sided Amplitude Spectrum of X(t)')
+%      xlabel('f (Hz)')
+%      ylabel('|P1(f)|')
+% 	 set(gca,'ylim',[0 1.2*max_pow_val])
+%      hold on
+%      amp_range = get(gca,'ylim');hold on;
+%      fill([f-filt_band/2,f-filt_band/2,f+filt_band/2,f+filt_band/2],[amp_range flip(amp_range)],[1 0.3 0.3],'Facealpha',0.1,'Edgecolor','none')
+%      plot(freqs_1Hz_sub_range(ind_max_pow),max_pow_val,'r.','Markersize',10)
+% 	 legend('Amplitude spectrum','Selected frequency')
+% 
+%      
+%      subplot(3,1,3)
+     plot(ax2plot(1),freqs_1Hz,P1_1Hz)
+     title(ax2plot(1),['Double-Sided Amplitude Spectrum of X(t) Zoomed to \pm',num2str(-f_max),'Hz'])
+     xlabel(ax2plot(1),'f (Hz)')
+     ylabel(ax2plot(1),'|P1(f)|')
+     set(ax2plot(1),'xlim',[-f_max f_max])
+     set(ax2plot(1),'ylim',[0 1.2*max_pow_val])
+     hold(ax2plot(1),'on')
+     amp_range = get(ax2plot(1),'ylim');
+     fill(ax2plot(1),[f-filt_band/2,f-filt_band/2,f+filt_band/2,f+filt_band/2],[amp_range flip(amp_range)],[1 0.3 0.3],'Facealpha',0.1,'Edgecolor','none')
+     plot(ax2plot(1),freqs_1Hz_sub_range(ind_max_pow),max_pow_val,'r.','Markersize',10)
+     legend(ax2plot(1),'Amplitude spectrum','Selected frequency')
  end
  
  out{1} = f;
