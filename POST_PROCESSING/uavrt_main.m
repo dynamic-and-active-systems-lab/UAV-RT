@@ -145,14 +145,14 @@ pulse_data = pulsefind(1/pulse_dur,pulse_dur,pulse_rep,data_abs);
 
 %% FLIGHT DATA AND RADIO DATA FUSION
 waitbar(4/total_steps,waitbar_fig,'Processing: Fusing radio and flight data');
-veh_out = vehstates(pulse_times, veh_states,waypt_time);%
-    veh_out{1}(:,4) = wrapTo360(veh_out{1}(:,4)); %Wrap heading to 360. No longer need total angle.
-    pulse_veh_states = veh_out{1};%List of vehilce states at the moment of pulse reception
-    pulse_x   = veh_out{1}(:,8); % X position when each pulse is received
-    pulse_y   = veh_out{1}(:,9); % Y position when each pulse is received
-    pulse_yaw = veh_out{1}(:,4); % Yaw (heading in deg)  when each pulse is received
-    pulse_alt = veh_out{1}(:,5); % Altitude when each pulse is received
-    pulse_waypt_num = veh_out{2};% The waypoint the vehicle was at when this pulse is received. NaN if not at a waypoint
+[veh_out, pulse_waypt_num] = vehstates(pulse_times, veh_states,waypt_time);%
+    veh_out(:,4) = wrapTo360(veh_out(:,4)); %Wrap heading to 360. No longer need total angle.
+    %pulse_veh_states = veh_out;%List of vehilce states at the moment of pulse reception
+    pulse_x   = veh_out(:,8); % X position when each pulse is received
+    pulse_y   = veh_out(:,9); % Y position when each pulse is received
+    pulse_yaw = veh_out(:,4); % Yaw (heading in deg)  when each pulse is received
+    pulse_alt = veh_out(:,5); % Altitude when each pulse is received
+    %pulse_waypt_num = veh_out{2};% The waypoint the vehicle was at when this pulse is received. NaN if not at a waypoint
     %Convert pulse locations to latlon and range/bearing
     pulse_latlon = xy2latlon(latlonhome,[pulse_y,pulse_x]);
     pulse_cyl   = [hypot(pulse_y,pulse_x),wrapTo360(180/pi*atan2(pulse_y,pulse_x))];
