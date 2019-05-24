@@ -41,7 +41,7 @@ function [out] = doapca(pulse_sig,pulse_yaw,pulse_waypt_num_in,total_waypts,stre
 %                            pulse amplitudes    amplitude           signal amplitude
 %                            pulse amplitudes    power               signal power
 %                            pulse power         amplitude           signal power
-%                            pulse power         power               power of signal power (power^2) -  this should likely be used. 
+%                            pulse power         power               power of signal power (power^2) -  this shouldn't likely be used. 
 %
 %   scale               a char array of 'log' or 'linear' to indicate if
 %                       the scaling used in the PCA method should be log or
