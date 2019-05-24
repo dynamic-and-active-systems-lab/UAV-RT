@@ -191,7 +191,8 @@ if num_of_waypts_with_pulses ~=0
     %% DOA ESTIMATION
     waitbar(4/total_steps,waitbar_fig,'Processing: Determining bearing estimates');
     %                (Pulse Amplitudes, Pulse Yaws, Pulse waypoint number,total num of waypts, power or amp?, scaling,plot control)
-    [doaout] = doapca(pulse_amp,pulse_yaw,pulse_waypt_num,num_of_waypts,'power','linear','noplot');%All inputs required
+    figure;
+    [doaout] = doapca(pulse_amp,pulse_yaw,pulse_waypt_num,num_of_waypts,'power','linear',gcf);%All inputs required
         DOA_tau = doaout{2};                                             %Tau values of each bearing
         DOA_calc_deg_N_CW = doaout{1};                                   %DOA degree angle from N with postiive CW -i.e. a regular compas bearing.
         DOA_calc_rad_N_CW = DOA_calc_deg_N_CW*pi/180;                    %DOA radian angle from N with postiive CW -i.e. a regular compas bearing.

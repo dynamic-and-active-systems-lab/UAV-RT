@@ -1,4 +1,4 @@
-function [out] = doapca(pulse_sig,pulse_yaw,pulse_waypt_num_in,total_waypts,strengthtype,scale,pltcntrl)
+function [out] = doapca(pulse_sig,pulse_yaw,pulse_waypt_num_in,total_waypts,strengthtype,scale,pltcontainer)
 %DOAPCA developes a bearing estimate for a series of received radio pulses
 %based on the principle component analysis method. 
 %   This function conductes a principle component analysis type bearin
@@ -46,8 +46,13 @@ function [out] = doapca(pulse_sig,pulse_yaw,pulse_waypt_num_in,total_waypts,stre
 %   scale               a char array of 'log' or 'linear' to indicate if
 %                       the scaling used in the PCA method should be log or
 %                       linear
-%   pltcntrl            'plot' or 'noplot' to turn on or off the plots
-%                       of pulse cloud and bearing estimate
+%   pltcontainer        This is a handle of a container (figure handle,
+%                       etc.) where the bearing estimate figures should go.
+%                       This function generates a set of subplots wihtin
+%                       this this container, one for each waypoint that
+%                       shows pulse cloud and bearing estimate of each
+%                       waypoint. If you don't want anything plotted, use
+%                       the empty values [] here. 
 %
 %OUTPUTS
 %   DOA_calc            a (wx1) numeric vector contain the bearing estimate
@@ -88,9 +93,9 @@ DOA_tau = NaN(num_of_waypts,1);
 %Eliminate the NaN values, and create a unique list
 waypts_with_pulses = unique(pulse_waypt_num_in(~isnan(pulse_waypt_num_in)));
 
-if strcmp(pltcntrl,'plot')
-    figure
-    tru_bear_color = [1 0.3 0.3];
+if ~isempty(pltcontainer)
+    %figure
+    %tru_bear_color = [1 0.3 0.3];
     est_bear_color =  [0    0.4470    0.7410];%[0.3 0.5 1];
     mkrsz = 10;
     lnwdth = 1;
@@ -131,21 +136,22 @@ for i = waypts_with_pulses%1:num_of_waypts
         line_scale = max(P_all_ang)/norm(wp);%the wp size changes if w1
        
     end
-    if strcmp(pltcntrl,'plot')
-        subplot(ceil(num_of_waypts/3),min([3,num_of_waypts]),i)
-        polarplot(curr_yaws*pi/180,P_all_ang,'.','Markersize',15,'Color',est_bear_color); hold on;
-        set(gca,'ThetaZeroLocation','top','ThetaDir','clockwise')
+    if ~isempty(pltcontainer)
+        axcurr = subplot(ceil(num_of_waypts/3),min([3,num_of_waypts]),i,polaraxes,'Parent',pltcontainer);
+        polarplot(axcurr,curr_yaws*pi/180,P_all_ang,'.','Markersize',15,'Color',est_bear_color); 
+        hold(axcurr,'on');
+        set(axcurr,'ThetaZeroLocation','top','ThetaDir','clockwise')
 
-        p_0noise_dir = polarplot([0 atan2(wp(2),wp(1))],line_scale*[0 norm(wp)],'Linewidth',lnwdth,'Color',est_bear_color);hold on
-            polarplot([atan2(wp(2),wp(1)) atan2(wp(2),wp(1))-3*pi/180],line_scale*[norm(wp) norm(wp)-norm(wp)*0.1],'b','Linewidth',lnwdth,'Color',est_bear_color)
-            polarplot([atan2(wp(2),wp(1)) atan2(wp(2),wp(1))+3*pi/180],line_scale*[norm(wp) norm(wp)-norm(wp)*0.1],'b','Linewidth',lnwdth,'Color',est_bear_color)
+        p_0noise_dir = polarplot(axcurr,[0 atan2(wp(2),wp(1))],line_scale*[0 norm(wp)],'Linewidth',lnwdth,'Color',est_bear_color);hold on
+            polarplot(axcurr,[atan2(wp(2),wp(1)) atan2(wp(2),wp(1))-3*pi/180],line_scale*[norm(wp) norm(wp)-norm(wp)*0.1],'b','Linewidth',lnwdth,'Color',est_bear_color)
+            polarplot(axcurr,[atan2(wp(2),wp(1)) atan2(wp(2),wp(1))+3*pi/180],line_scale*[norm(wp) norm(wp)-norm(wp)*0.1],'b','Linewidth',lnwdth,'Color',est_bear_color)
         
         max_sig_of_all_wypts = max(pulse_sig(~isnan(pulse_waypt_num))); %look at all the waypoints and find the max pulse amp. exclude pulses not at a waypoint
             max_sig_curr_wypt = max(curr_pulses);
             min_sig_curr_wypt = min(curr_pulses);
         
-        set(gca,'Fontsize',12)
-        set(gca,'Thetatick',0:45:335,'Thetaticklabel',{'N','NE','E','SE','S','SW','W','NW'},'TickLabelInterpreter','tex')
+        set(axcurr,'Fontsize',12)
+        set(axcurr,'Thetatick',0:45:335,'Thetaticklabel',{'N','NE','E','SE','S','SW','W','NW'},'TickLabelInterpreter','tex')
 %        set(gca,'TickLabelInterpreter','latex')
     end
 
