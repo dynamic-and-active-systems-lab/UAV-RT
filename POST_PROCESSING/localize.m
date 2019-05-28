@@ -35,6 +35,16 @@ function [position] = localize(X,Y,T,method)
 %RMR: Repeated median regression
 %MEST: M-estimation with Andrews psi function with c = 1.5
 
+%Make sure these are all column vectors
+if ~iscolumn(X)
+    X = X';
+end
+if ~iscolumn(Y)
+    Y = Y';
+end
+if ~iscolumn(T)
+    T= T';
+end
 
 
 max_iter = 1000;

@@ -36,7 +36,7 @@ function [position,intmap] = localize_cm(X,Y,T,pulse_sig,tau,tau_lim,ang_sep_lim
 
 %OUTPUTS:
 %position    -    1 x 2 estimate of [x,y] location of signal origin
-%intmap      -    k x 3 matrix of x,y position (columns 1 and 2) of each 
+%intmap      -    k x 5 matrix of x,y position (columns 1 and 2) of each 
 %                       bearing intersection, the weighting of that point
 %                       (column 3) and the bearing numbers that
 %                       created the intersection (columns 4 and5)
@@ -44,6 +44,24 @@ function [position,intmap] = localize_cm(X,Y,T,pulse_sig,tau,tau_lim,ang_sep_lim
 %Coordinate system implemented here is consistent with that from 
 %Lenth, Russell. On Finding the Source of a Signal. Technometeric. Vol. 23,
 %No. 2, 1981. 
+
+%Make sure these are all column vectors
+if ~iscolumn(X)
+    X = X';
+end
+if ~iscolumn(Y)
+    Y = Y';
+end
+if ~iscolumn(T)
+    T= T';
+end
+if ~iscolumn(pulse_sig)
+    pulse_sig= pulse_sig';
+end
+if ~iscolumn(tau)
+    tau= tau';
+end
+
 
 
 
@@ -119,7 +137,7 @@ T_INT_B = 180/pi*atan2(X_int-XB,Y_int-YB);
 sep_list = (abs(wrapTo360(T_INT_B)-wrapTo360(T_INT_A)));
 clip_ang_sep = sep_list>ang_sep_lim;
 if all(~clip_ang_sep) %if all clip are zero
-    warning(['Bearing estimate threshold not met. ' ,...
+    warndlg(['Bearing estimate threshold not met. ' ,...
               'No location estimate generated. ',...
               'Try separating waypoints, or decreasing threshold. ',...
               'The [min max] angular separation of your bearings is [',...
@@ -152,14 +170,13 @@ clip_front = front;
 %above the threshold. Need to filter out both the A and B lines that might
 %have had tau values below the threshold.
 clip_tau = (tau(bcA)>=tau_lim)&(tau(bcB)>=tau_lim);
-if sum(clip_tau)<2 %if fewer than 2 good taus...
-    warning(['Did not have sufficient tau values for least two bearings. ' ,...
-              'No location estimate generated. ',...
+if sum(clip_tau)<2 && length(bcA)>1%if fewer than 2 good taus and we had more than one combination of points...
+    warndlg(['Did not have sufficient tau values for least two bearings. ' ,...
               'May need better data or try decreasing tau threshold. ',...
               'The [min max] tau of your bearings is [',...
               num2str(min(tau)),', ',...
               num2str(max(tau)),']. REPORTED LOCATION ESTIMATE ',...
-              'MAY HAVE SIGNIFICANT ERROR.']);
+              'USES ALL BEARINGS AND MAY HAVE SIGNIFICANT ERROR.']);
 	%Still give provide an estimate, because there is no other option
     clip_tau = ones(size(clip_tau));
 end
