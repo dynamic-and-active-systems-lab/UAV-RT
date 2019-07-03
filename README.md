@@ -6,3 +6,7 @@ This repository contains the programs intended to be run on a companion computer
 
 - VEHICLE: Contains files meant to be downloaded to the companion computer (located on-board the vehicle). For full setup instructions reference [Companion Computer Setup](https://uavrt.nau.edu/index.php/docs/radiotelem/companion-computer/).
 - POST_PROCESSING: This folder contains the MATLAB script UAVRT_main.m. This script calls the associated functions for processing flight data and I/Q radio data. Reference in code documentation and video tutorial for more information.
+
+
+Version 1.0: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3267342.svg)](https://doi.org/10.5281/zenodo.3267342)
+
