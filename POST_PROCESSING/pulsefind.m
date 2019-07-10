@@ -1,4 +1,4 @@
-function [data_out] = pulsefind(Fs,pulse_dur,pulse_rep,data_in)
+function [data_out] = pulsefind(Fs,pulse_dur,pulse_rep,data_in,thrshld)
 %PULSEFIND generates a list of pulse amplitude and times based on inputed
 %radio data.
 %   This function takes in radio data at a given sampling frequency with an
@@ -45,6 +45,11 @@ function [data_out] = pulsefind(Fs,pulse_dur,pulse_rep,data_in)
 %pulse_dur -- float         --> dbl         -- time of the pulse duration (s)
 %pulse_rep -- float        	--> dbl         -- repetition rate of pulses (s)
 %data_in   -- matlab.double (nx1) --> numeric array  -- vector of complex radio data
+%thrshld   -- float         --> dbl         -- level threshold for pulse
+%                                              detection. ie. 0.5 means
+%                                              values greater than 50%
+%                                              above moving averages are
+%                                              selected as possible pulses.
 
 %To generate the appropriate complex Python array is the is_complex option:
 %a = matlab.double([[1+2j,2,3], [6,7,8]],is_complex=True)
@@ -106,7 +111,7 @@ movemean_data = movmean(data_abs,n_pulse_rep-5*n_pulse_dur);%moving mean of the 
 
 %% THRESHOLD TO DETECT PULSES OVER 1.5X THE MOVING MEAN
 data_abs_thresh = data_abs;
-data_abs_thresh(data_abs<1.5*movemean_data)=0;
+data_abs_thresh(data_abs<(1+thrshld)*movemean_data)=0;
 % plot(t,data_abs_thresh,'--'); hold on;
 
 %% SLIDING WINDOW CORRELATOR TO REJECT FALSE POSITIVES IN THE TIME BETWEEN PULSES

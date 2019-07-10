@@ -328,8 +328,8 @@ waypt = zeros(length(waypt_in_ind),5); %preallocate array
     end
     
   
-a_sum(:,10) = msk_at_alt;  %send out the logic of being at a waypt
-a_sum(:,11) = msk_at_waypt;%send out the logic of being at alt. This may be useful for transect flights. 
+a_sum(:,10) = msk_at_waypt;  %send out the logic of being at a waypt
+a_sum(:,11) = msk_at_alt;    %send out the logic of being at alt. This may be useful for transect flights. 
 
 %Plot the 3d position of the flight and waypoints, along with a 2d ground
 %projection.

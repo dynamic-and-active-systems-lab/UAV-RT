@@ -131,7 +131,7 @@ data_out = cleandata(Fs,pulse_dur,f,filt_band,SDR_raw);
 
 waitbar(3/total_steps,waitbar_fig,'Processing: Detecting pulses');
 %Find pulses within signal amplitude data
-pulse_data = pulsefind(1/pulse_dur,pulse_dur,pulse_rep,data_abs);
+pulse_data = pulsefind(1/pulse_dur,pulse_dur,pulse_rep,data_abs,0.5); %Use 50% above moving mean as threshold
     %Sometimes pulses are found when we don't have flight data (after
     %landing). Eliminate them with the mask that checks time stamps. 
     valid_pulse_msk = (pulse_data{1}>=veh_states(1,1)&pulse_data{1}<=veh_states(end,1));
