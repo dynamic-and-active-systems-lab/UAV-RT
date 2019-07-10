@@ -24,7 +24,8 @@ function [out] = radioprep(data_filename,varargin)
 %                       want to consider, measured from the start of the 
 %                       record. This doesn't change the length of the
 %                       output, only the region overwhich you want to use
-%                       to conduct the FFT looking for peaks
+%                       to conduct the FFT looking for peaks. [0 Inf] will
+%                       consider the entire record.
 %Parameters (need to spell out the name, then enter the value)
 %   'plot'              Control of plotting of results. Enter 'fft' to plot
 %                       FFT of entire dataset. Enter 'spectro' to see the
@@ -173,8 +174,12 @@ clear d f;
 %t_raw = 1/Fs*(0:1:length(SDR_raw)-1); %create a time vector at raw sample rate
 %T = length(SDR_raw)/Fs;             %the total time of the data
 
-if t_bounds==0 %If user didn't specify a time bounds, use the entire dataset. 
+if isequal(t_bounds,0)   %If user didn't specify a time bounds or entered [0 Inf], use the entire dataset. 
     t_bounds = [0 length(SDR_raw)/Fs];
+elseif numel(t_bounds)==2 
+    if t_bounds(2) == Inf
+        t_bounds(2) = length(SDR_raw)/Fs;
+    end
 end
 
 %Use Fs and start and end times to down select data to FFT. 
