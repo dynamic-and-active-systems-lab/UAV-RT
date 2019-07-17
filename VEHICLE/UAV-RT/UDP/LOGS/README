@@ -1,0 +1,2 @@
+This file stores the UDP logs. A text file is generated every time the computer starts up and runs
+the UDP_MAIN.py script. Each text file shows a copy of the output from UDP_MAIN.py script.

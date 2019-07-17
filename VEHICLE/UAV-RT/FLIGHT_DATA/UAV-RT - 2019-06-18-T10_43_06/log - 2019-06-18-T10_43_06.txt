@@ -1,0 +1,12 @@
+>>> ArduCopter V3.6.9 (632be63f)
+>>> ChibiOS: d2030d88
+>>> fmuv2 002B001A 33355108 33373538
+>>> Frame: HEXA
+Linux
+Connecting to Pixhawk
+Connected!
+gr-osmosdr v0.1.4-99-gc98be5dd (0.1.5git) gnuradio 3.7.11
+built-in source types: file fcd rtl_tcp hackrf rfspace airspy redpitaya 
+Using AirSpy NOS v1.0.0-rc10-0-g946184a 2016-09-19, samplerates: 2.5M 10M 
+>>> EKF2 IMU1 in-flight yaw alignment complete
+>>> EKF2 IMU0 in-flight yaw alignment complete
