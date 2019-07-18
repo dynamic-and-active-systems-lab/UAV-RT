@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 ##################################################
 # GNU Radio Python Flow Graph
-# Title: Top Block
-# Generated: Tue Jul 16 15:51:50 2019
+# Title: Gnu Script
+# Generated: Thu Jul 18 14:35:09 2019
 ##################################################
 
 
@@ -18,20 +18,20 @@ from optparse import OptionParser
 import osmosdr
 import time
 import timesync
-import os
+import os  # MODIFIED
 
 
-class top_block(gr.top_block):
+class gnu_script(gr.top_block):
 
     def __init__(self):
-        gr.top_block.__init__(self, "Top Block")
+        gr.top_block.__init__(self, "Gnu Script")
 
         ##################################################
         # Variables
         ##################################################
-        cwd = os.getcwd()  # Gets current directory, allows any user name to specified when setting up UDOO
-        log_path_username = cwd[:-4]
-        self.prefix = prefix = log_path_username +  "/CURRENT_DATA/"
+        cwd = os.getcwd()  # MODIFIED Gets current directory, allows any user name to specified when setting up UDOO
+        log_path_username = cwd  # MODIFIED
+        self.prefix = prefix = log_path_username + "/UAV-RT/CURRENT_DATA/"  # MODIFIED this varible from the standard top block
         self.samp_rate = samp_rate = 2500000
         self.recfile = recfile = prefix + 'SDR - ' + datetime.now().strftime("%Y-%m-%d-T%H_%M_%S") + ".dat"
         self.gainRF = gainRF = 17.0
@@ -42,7 +42,7 @@ class top_block(gr.top_block):
         ##################################################
         # Blocks
         ##################################################
-        self.timesync_pixstream_source_0 = timesync.pixstream_source(log_path_username + '/CURRENT_DATA')
+        self.timesync_pixstream_source_0 = timesync.pixstream_source(log_path_username + '/UAV-RT/CURRENT_DATA')  # MODIFIED
         self.rational_resampler_xxx_0_0 = filter.rational_resampler_ccc(
                 interpolation=audio_rate,
                 decimation=2500000,
@@ -122,7 +122,7 @@ class top_block(gr.top_block):
         self.audio_rate = audio_rate
 
 
-def main(top_block_cls=top_block, options=None):
+def main(top_block_cls=gnu_script, options=None):
 
     tb = top_block_cls()
     tb.start()

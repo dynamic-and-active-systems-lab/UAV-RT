@@ -10,7 +10,7 @@ import os
 import shutil
 from config_read import config_read
 
-# time.sleep(30)  # delay allows network connections to be initialized on startup
+time.sleep(30)  # delay allows network connections to be initialized on startup
 #############################################################################
 # VARIABLES
 UDP_IP_in = "10.42.0.1"  # UDOO IP address
@@ -18,11 +18,11 @@ UDP_IP_in = "10.42.0.1"  # UDOO IP address
 UDP_PORT_in = 9090
 UDP_PORT_out = 9091
 cwd = os.getcwd()  # Gets current directory, allows any user name to specified when setting up UDOO
-log_path_username = cwd[:-4]  # directory should have a similar format to:/home/USERNAME/UAV-RT
-gnu_path = log_path_username + '/GNU_RADIO/top_block.py'  # location of GNU Radio Script
-path_prefix = log_path_username + '/FLIGHT_DATA/'  # flight data final location path
-current_data = log_path_username + '/CURRENT_DATA/'  # file path for the latest flight data
-config_path = log_path_username + '/curr_config.uavrt'  # file path to configuration file
+log_path_username = cwd  # directory should have a similar format to:/home/USERNAME
+gnu_path = log_path_username + '/UAV-RT/GNU_RADIO/top_block.py'  # location of GNU Radio Script
+path_prefix = log_path_username + '/UAV-RT/FLIGHT_DATA/'  # flight data final location path
+current_data = log_path_username + '/UAV-RT/CURRENT_DATA/'  # file path for the latest flight data
+config_path = log_path_username + '/UAV-RT/curr_config.uavrt'  # file path to configuration file
 
 #############################################################################
 # Intializes UDP Receiving IP Port

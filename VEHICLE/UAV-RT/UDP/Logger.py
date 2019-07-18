@@ -9,7 +9,7 @@ class Logger(object):
         global log_file_name
         self.terminal = sys.stdout
         cwd = os.getcwd()  # Gets current directory, allows any user name to specified at setup
-        log_path_prefix = cwd + '/LOGS/'
+        log_path_prefix = cwd + '/UAV-RT/UDP/LOGS/'
         log_file_name = log_path_prefix + "udp_log - " + \
             datetime.now().strftime("%Y-%m-%d-T%H_%M_%S") + ".txt"
         self.log = open(log_file_name, "a", 0)

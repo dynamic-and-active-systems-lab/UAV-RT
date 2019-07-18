@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 ##################################################
 # GNU Radio Python Flow Graph
-# Title: Top Block
-# Generated: Tue Jul 16 14:12:21 2019
+# Title: Gnu Script
+# Generated: Thu Jul 18 14:35:09 2019
 ##################################################
 
 
@@ -21,29 +21,28 @@ import timesync
 import os  # MODIFIED
 
 
-class top_block(gr.top_block):
+class gnu_script(gr.top_block):
 
     def __init__(self):
-        gr.top_block.__init__(self, "Top Block")
+        gr.top_block.__init__(self, "Gnu Script")
 
         ##################################################
         # Variables
         ##################################################
         cwd = os.getcwd()  # MODIFIED Gets current directory, allows any user name to specified when setting up UDOO
-        log_path_username = cwd[:-4]  # MODIFIED
+        log_path_username = cwd  # MODIFIED
+        self.prefix = prefix = log_path_username + "/UAV-RT/CURRENT_DATA/"  # MODIFIED this varible from the standard top block
+        self.samp_rate = samp_rate = 2500000
+        self.recfile = recfile = prefix + 'SDR - ' + datetime.now().strftime("%Y-%m-%d-T%H_%M_%S") + ".dat"
         self.gainRF = gainRF = 17.0
         self.gainIF = gainIF = 8.0
-        self.prefix = prefix = log_path_username + "/CURRENT_DATA/"  # MODIFIED this varible from the standard top block
-        self.gains = gains = "RF=" + str(gainRF) + " dB - " + "IF=" + str(gainIF) + " dB - "
-        self.samp_rate = samp_rate = 2500000
-        self.recfile = recfile = prefix + gains + datetime.now().strftime("%Y-%m-%d-T%H.%M.%S") + ' - ' + datetime.now().strftime('%s.%f')[:-3] + ".dat"
         self.freq = freq = 148.000000e6
         self.audio_rate = audio_rate = 48000 
 
         ##################################################
         # Blocks
         ##################################################
-        self.timesync_pixstream_source_0 = timesync.pixstream_source(log_path_username + '/CURRENT_DATA')  # MODIFIED this variable too
+        self.timesync_pixstream_source_0 = timesync.pixstream_source(log_path_username + '/UAV-RT/CURRENT_DATA')  # MODIFIED
         self.rational_resampler_xxx_0_0 = filter.rational_resampler_ccc(
                 interpolation=audio_rate,
                 decimation=2500000,
@@ -74,35 +73,12 @@ class top_block(gr.top_block):
         self.connect((self.rational_resampler_xxx_0_0, 0), (self.blocks_file_sink_0_0, 0))
         self.connect((self.timesync_pixstream_source_0, 0), (self.blocks_vector_sink_x_0_0, 0))
 
-    def get_gainRF(self):
-        return self.gainRF
-
-    def set_gainRF(self, gainRF):
-        self.gainRF = gainRF
-        self.osmosdr_source_0.set_gain(self.gainRF, 0)
-        self.set_gains("RF=" + str(self.gainRF)+ " dB - " + "IF=" + str(self.gainIF) + " dB - ")
-
-    def get_gainIF(self):
-        return self.gainIF
-
-    def set_gainIF(self, gainIF):
-        self.gainIF = gainIF
-        self.osmosdr_source_0.set_if_gain(self.gainIF, 0)
-        self.set_gains("RF=" + str(self.gainRF)+ " dB - " + "IF=" + str(self.gainIF) + " dB - ")
-
     def get_prefix(self):
         return self.prefix
 
     def set_prefix(self, prefix):
         self.prefix = prefix
-        self.set_recfile(self.prefix + self.gains + datetime.now().strftime("%Y-%m-%d-T%H.%M.%S") + ' - ' + datetime.now().strftime('%s.%f')[:-3] + ".dat")
-
-    def get_gains(self):
-        return self.gains
-
-    def set_gains(self, gains):
-        self.gains = gains
-        self.set_recfile(self.prefix + self.gains + datetime.now().strftime("%Y-%m-%d-T%H.%M.%S") + ' - ' + datetime.now().strftime('%s.%f')[:-3] + ".dat")
+        self.set_recfile(self.prefix + 'SDR - ' + datetime.now().strftime("%Y-%m-%d-T%H_%M_%S") + ".dat")
 
     def get_samp_rate(self):
         return self.samp_rate
@@ -118,6 +94,20 @@ class top_block(gr.top_block):
         self.recfile = recfile
         self.blocks_file_sink_0_0.open(self.recfile)
 
+    def get_gainRF(self):
+        return self.gainRF
+
+    def set_gainRF(self, gainRF):
+        self.gainRF = gainRF
+        self.osmosdr_source_0.set_gain(self.gainRF, 0)
+
+    def get_gainIF(self):
+        return self.gainIF
+
+    def set_gainIF(self, gainIF):
+        self.gainIF = gainIF
+        self.osmosdr_source_0.set_if_gain(self.gainIF, 0)
+
     def get_freq(self):
         return self.freq
 
@@ -132,7 +122,7 @@ class top_block(gr.top_block):
         self.audio_rate = audio_rate
 
 
-def main(top_block_cls=top_block, options=None):
+def main(top_block_cls=gnu_script, options=None):
 
     tb = top_block_cls()
     tb.start()
