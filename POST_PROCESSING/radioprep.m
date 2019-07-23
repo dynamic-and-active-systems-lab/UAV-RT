@@ -25,7 +25,16 @@ function [out] = radioprep(data_filename,varargin)
 %                       record. This doesn't change the length of the
 %                       output, only the region overwhich you want to use
 %                       to conduct the FFT looking for peaks. [0 Inf] will
-%                       consider the entire record.
+%                       consider the entire record. If the time selection
+%                       vector is outside the that available as calculated
+%                       by the length of the specified radio data file and
+%                       the sample rate (samples/Fs), then the program
+%                       throws a warning and changes the time bounds to
+%                       that available in the data. Start times less than
+%                       zero will be set to zero and end times greated than
+%                       samples/Fs will be set to samples/Fs. The reported
+%                       t_bounds in the output of this program can be used
+%                       to see what the program selected. 
 %Parameters (need to spell out the name, then enter the value)
 %   'plot'              Control of plotting of results. Enter 'fft' to plot
 %                       FFT of entire dataset. Enter 'spectro' to see the
@@ -49,9 +58,12 @@ function [out] = radioprep(data_filename,varargin)
 %                       out{1}  f   The found pulse frequency
 %                       out{2}  SDR_raw raw IQ data in complex form, same
 %                               length as the input data
-%                       out{3}  Frequency vector from the FFT
+%                       out{3}  Time bounds of the data used. This may
+%                               differ from the input if the requested time
+%                               was outside that available in the dataset.
+%                       out{4}  Frequency vector from the FFT
 %                       result
-%                       out{4}  Singled-sided amplitude results from FFT
+%                       out{5}  Singled-sided amplitude results from FFT
 %
 %
 
@@ -182,10 +194,32 @@ elseif numel(t_bounds)==2
     end
 end
 
+
 %Use Fs and start and end times to down select data to FFT. 
 ind_start = floor(min(t_bounds)*Fs+1);%+1 because first element is at t = 0;
-ind_end = floor(max(t_bounds)*Fs);
+ind_end   = floor(max(t_bounds)*Fs); %If the request is longer than the data, only select what is available. 
+
+%Now do some checks on the ind selection to make sure it doesn't over step
+%the number of elements available. If these are out of bounds, warn the
+%user
+if ind_start<1 || ind_start>length(SDR_raw) ||...
+     ind_end<1 || ind_end>length(SDR_raw)
+%One of these was out of bounds
+    warning('UAVRT:timeOutofbounds','Start or end time was outside of the available data given the specified sample rate. Time bounds have been adjusted to those specified in the output.')
+    %Default to zero start if start time is out of bounds
+    if ind_start<1 || ind_start>length(SDR_raw)
+        t_bounds(1) = 0;
+        ind_start = 1;
+	%Default to length of dataset if end time is out of bounds
+    elseif ind_end<1 || ind_end>length(SDR_raw)
+        t_bounds(2) = length(SDR_raw)/Fs;
+        ind_end = length(SDR_raw);
+    end
+end
+
+%Build and index selection vector
 inds_select =  ind_start:1:ind_end;
+
 if mod(length(inds_select),2) %Then it is odd
     inds_select = inds_select(1:end-1); %we want an even number of elements for future operations.
 end
@@ -279,8 +313,9 @@ end
  
  out{1} = f;
  out{2} = SDR_raw;
- out{3} = freqs_1Hz;
- out{4} = P1_1Hz;
+ out{3} = t_bounds;
+ out{4} = freqs_1Hz;
+ out{5} = P1_1Hz;
  
 end
 

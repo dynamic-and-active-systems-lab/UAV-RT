@@ -48,7 +48,7 @@ function [out] = doapca(pulse_sig,pulse_yaw,pulse_waypt_num_in,total_waypts,stre
 %                       linear
 %   pltcontainer        This is a handle of a container (figure handle,
 %                       etc.) where the bearing estimate figures should go.
-%                       This function generates a set of subplots wihtin
+%                       This function generates a set of subplots within
 %                       this this container, one for each waypoint that
 %                       shows pulse cloud and bearing estimate of each
 %                       waypoint. If you don't want anything plotted, use
@@ -137,7 +137,7 @@ for i = waypts_with_pulses%1:num_of_waypts
        
     end
     if ~isempty(pltcontainer)
-        axcurr = subplot(ceil(num_of_waypts/3),min([3,num_of_waypts]),i,polaraxes,'Parent',pltcontainer);
+        axcurr = subplot(ceil(num_of_waypts/3),min([3,num_of_waypts]),i,polaraxes,'Parent',pltcontainer);        
         polarplot(axcurr,curr_yaws*pi/180,P_all_ang,'.','Markersize',15,'Color',est_bear_color); 
         hold(axcurr,'on');
         set(axcurr,'ThetaZeroLocation','top','ThetaDir','clockwise')
