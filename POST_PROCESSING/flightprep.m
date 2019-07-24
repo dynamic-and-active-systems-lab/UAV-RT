@@ -40,9 +40,16 @@ function [a_sum, waypt, home] = flightprep(data_filename,varargin)
 %                       not entered.
 %   'waypt_time'        min and max time required to be below waypt_vel to 
 %                       define a waypoint. Default is [0 10000] s if not entered.
-%   'waypt_alt'         This is a vector of where altitudes AGL of waypoint 
-%                       definitions. Waypoints considered withing +/-10% of
-%                       these altitudes. If not entered max alt is used. 
+%   'waypt_alt'         This is the waypoint altitudes (AGL) definition
+%                       listting. If entered as a 1x1 the waypoints is 
+%                       considered withing +/-10% of that altitudes. 
+%                       If not entered +/-10% if max alt is used. 
+%                       If listed as an [nx2], each row vector represents
+%                       the bounds of a waypoint definition. For example if
+%                       one waypoint in the flight was somewhere between 
+%                       20 and 22 m, and another was between 45 and 46 m,
+%                       the entry would be [20 22; 45 46]. In this format,
+%                       the lower altitude must be in the first column. 
 %   'axis_handles'      Handle of axis where data should be plotted. If
 %                       empty, function will create a new figure. 
 
@@ -246,11 +253,19 @@ end
 
 %Create the logic for when we are at the prescribed altitudes.
 msk_at_alt = zeros(size(time));
-for i = 1:length(waypt_alt)
-msk_at_alt = msk_at_alt|...
-             (alt>=0.9*waypt_alt(i)&...
-              alt<=1.1*waypt_alt(i));  %Continually at logical 1s for when we are at the altitudes where we exepct to be at waypoints
+if numel(waypt_alt)==1 %Single altitude given
+    msk_at_alt = (alt>=0.9*waypt_alt&...
+                  alt<=1.1*waypt_alt);  %Continually at logical 1s for when we are at the altitudes where we exepct to be at waypoints
+elseif size(waypt_alt,2)==2 %List of altitude bounds
+    for i = 1:size(waypt_alt,1)
+        msk_at_alt = msk_at_alt|...
+            (alt>=waypt_alt(i,1)&...
+             alt<=waypt_alt(i,2));  %Continually at logical 1s for when we are at the altitudes where we exepct to be at waypoints
+    end
+else
+    error('UAVRT:waypointaltdef','Altitude definition was not a single scalar nor an nx2 matrix. ')
 end
+
 %Create initial waypoint candidate index list and mask. Note that these
 %include points where the dwell times might be outside those specified by
 %the user. 
