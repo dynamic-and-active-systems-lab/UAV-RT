@@ -157,16 +157,22 @@ if strcmp(plot_control,'plot')
 end       
 
 %% Read Flight Data
-A_telem = tdfread(telemfile);
-a_sum(:,1)=A_telem.Time_s-A_telem.Time_s(1);
-a_sum(:,2)=rad2deg(A_telem.Roll_rad); %roll
-a_sum(:,3)=rad2deg(A_telem.Pitch_rad); %pitch
-%a_sum(:,4)=wrapTo360(rad2deg(A_telem.Yaw_rad)); %yaw correcton to go from 0 to 360 vs -180 to 180
-a_sum(:,4)=180/pi*unwrap(wrapTo2Pi(A_telem.Yaw_rad)); %yaw in degrees from start. We unwrap, because we have to lower the resolution below to clean up repeated time logs, and if we wrap to 2pi here, we would end up with yaw records about halfway between 2pi and 0. We'll rewrap to 360 after the code below.
-a_sum(:,5)=A_telem.Alt_m_AGL; %alt
-a_sum(:,6)=A_telem.Lat; %Lat
-a_sum(:,7)=A_telem.Long; %Long
 
+%If the last line of telemetry wasn't written completely, the tdfread will
+%throw an error. To deal with this, we just wi
+%A_telem = tdfread(telemfile); Used prior to R2019A. Will throw an error if
+%missing data on a row
+% a_sum(:,1)=A_telem.Time_s-A_telem.Time_s(1);
+% a_sum(:,2)=rad2deg(A_telem.Roll_rad); %roll
+% a_sum(:,3)=rad2deg(A_telem.Pitch_rad); %pitch
+% %a_sum(:,4)=wrapTo360(rad2deg(A_telem.Yaw_rad)); %yaw correcton to go from 0 to 360 vs -180 to 180
+% a_sum(:,4)=180/pi*unwrap(wrapTo2Pi(A_telem.Yaw_rad)); %yaw in degrees from start. We unwrap, because we have to lower the resolution below to clean up repeated time logs, and if we wrap to 2pi here, we would end up with yaw records about halfway between 2pi and 0. We'll rewrap to 360 after the code below.
+% a_sum(:,5)=A_telem.Alt_m_AGL; %alt
+% a_sum(:,6)=A_telem.Lat; %Lat
+% a_sum(:,7)=A_telem.Long; %Long
+opts = detectImportOptions(telemfile,'Filetype','Text','MissingRule','omitrow');
+a_sum = readmatrix(telemfile,opts);%Available in R2019a
+a_sum(:,1) = a_sum(:,1)-a_sum(1,1);%Time vector is a delta time
 
 %%
 %This section of code cleans up the position data that seems to report the
@@ -220,7 +226,8 @@ a_sum(:,9)=d.*cos(B); %This is distance in the East Direction in meters = Y Posi
 
 %Now set the waypt alt if provided by the user 
 if isnan(waypt_alt)
-    waypt_alt = max(A_telem.Alt_m_AGL)/1.1;%We use +/- 10% of this values later so range of consideration would be [0.9*max/1.1 =  0.82*max, 1.1*max/1.1 = 1*max]
+    %waypt_alt = max(A_telem.Alt_m_AGL)/1.1;%We use +/- 10% of this values later so range of consideration would be [0.9*max/1.1 =  0.82*max, 1.1*max/1.1 = 1*max]
+    waypt_alt = max(a_sum(:,5))/1.1;
 end
 
 %Create some variables to make code more readable. 

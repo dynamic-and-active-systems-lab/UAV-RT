@@ -210,8 +210,9 @@ if ind_start<1 || ind_start>length(SDR_raw) ||...
     if ind_start<1 || ind_start>length(SDR_raw)
         t_bounds(1) = 0;
         ind_start = 1;
+    end
 	%Default to length of dataset if end time is out of bounds
-    elseif ind_end<1 || ind_end>length(SDR_raw)
+    if ind_end<1 || ind_end>length(SDR_raw)
         t_bounds(2) = length(SDR_raw)/Fs;
         ind_end = length(SDR_raw);
     end
