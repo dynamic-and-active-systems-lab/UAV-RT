@@ -262,8 +262,14 @@ end
  
  %figure;
  %plot(freqs_d,[P2_d(n/2+2:end); P2_d(1:n/2+1)],'--r')
-  
- P1_smooth = movmean(P1,floor(length(freqs)/(freqs(end)-freqs(1))));
+ 
+ wind_size = floor(length(freqs)/(freqs(end)-freqs(1)));
+ if wind_size>=1
+	P1_smooth = movmean(P1,floor(length(freqs)/(freqs(end)-freqs(1))));
+ else %Short  radio logs end up with a window size < 1. In that case, we don't do a moving mean to smooth out the P1 values
+    P1_smooth = P1;
+ end
+     
  freqs_1Hz = freqs(1):1:freqs(end);
  P1_1Hz = interp1(freqs,P1_smooth,freqs_1Hz);
  
