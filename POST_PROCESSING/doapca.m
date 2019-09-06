@@ -121,7 +121,7 @@ for i = waypts_with_pulses%1:num_of_waypts
     
     if length(curr_pulses)<4
         warning(['Only ',num2str(length(curr_pulses)),' pulse(s) detected at waypoint #',num2str(i),' - insufficient to make DOA estimate.'])
-        wp(2) = NaN; wp(1) = NaN;tau = NaN;
+        wp(2) = NaN; wp(1) = NaN;tau = NaN; line_scale = 0;
     else
 	    Pe_star_dB = [P_all_ang.*cos(angs),P_all_ang.*sin(angs)];
         n = length(Pe_star_dB);

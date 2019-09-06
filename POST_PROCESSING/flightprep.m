@@ -171,7 +171,10 @@ end
 % a_sum(:,6)=A_telem.Lat; %Lat
 % a_sum(:,7)=A_telem.Long; %Long
 opts = detectImportOptions(telemfile,'Filetype','Text','MissingRule','omitrow');
-a_sum = readmatrix(telemfile,opts);%Available in R2019a
+a_sum_0 = readmatrix(telemfile,opts);%Available in R2019a
+a_sum = [a_sum_0(:,1),a_sum_0(:,3:4),180/pi*unwrap(a_sum_0(:,5)),a_sum_0(:,8),a_sum_0(:,6:7)]; %Put the summary data in the column formats we want for the output
+%[Time, Pitch, Roll, Yaw, Alt, Lat, Lon]
+clear('a_sum_0');%We don't need this anymore
 a_sum(:,1) = a_sum(:,1)-a_sum(1,1);%Time vector is a delta time
 
 %%
@@ -361,7 +364,7 @@ if  strcmp(plot_control,'plot')
     plot3(ax2plot(2),a_sum(:,8),a_sum(:,9), a_sum(:,5),'Color',[0 0 1]);hold(ax2plot(2),'on')
     plot(ax2plot(2),a_sum(:,8),a_sum(:,9),'Color',[0.5 0.5 1]); 
     
-    %Plot the 
+    %Plot the circles at the waypoints
     plot3(ax2plot(2),a_sum(find(msk_at_waypt_2),8),a_sum(find(msk_at_waypt_2),9),a_sum(find(msk_at_waypt_2),5),'o','MarkerEdgeColor',[1 0 0],'MarkerFaceColor',[1 0 0]);
     plot(ax2plot(2),a_sum(find(msk_at_waypt_2),8),a_sum(find(msk_at_waypt_2),9),'o','MarkerEdgeColor',[1 0.5 0.5],'MarkerFaceColor',[1 0.5 0.5]);
     
