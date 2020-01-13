@@ -1,0 +1,1 @@
+This folder holds the data archive for each flight. Upon a stop call to the radio program, the files in the CURRENT_DATA folder are transferred here. These files are not deleted be any onboard software and will need to be manually cleared if the companion computer hard drive begins to fill. 

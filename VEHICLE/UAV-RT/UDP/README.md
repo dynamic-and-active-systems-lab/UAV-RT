@@ -1,0 +1,1 @@
+This folder contains the UDP_MAIN.py function that should be executed at system startup and other python scrips used by UDP_MAIN.
