@@ -59,10 +59,10 @@ UDP_PORT_in = 9090
 UDP_PORT_out = 9091
 cwd = os.getcwd()  # Gets current directory, allows any user name to specified when setting up UDOO
 log_path_username = cwd  # directory should have a similar format to:/home/USERNAME
-gnu_path = log_path_username + '/UAV-RT/GNU_RADIO/top_block.py'  # location of GNU Radio Script
-path_prefix = log_path_username + '/UAV-RT/FLIGHT_DATA/'  # flight data final location path
-current_data = log_path_username + '/UAV-RT/CURRENT_DATA/'  # file path for the latest flight data
-config_path = log_path_username + '/UAV-RT/curr_config.uavrt'  # file path to configuration file
+gnu_path = log_path_username + '/UAV-RT/VEHICLE/UAV-RT/GNU_RADIO/top_block.py'  # location of GNU Radio Script
+path_prefix = log_path_username + '/UAV-RT/VEHICLE/UAV-RT/FLIGHT_DATA/'  # flight data final location path
+current_data = log_path_username + '/UAV-RT/VEHICLE/UAV-RT/CURRENT_DATA/'  # file path for the latest flight data
+config_path = log_path_username + '/UAV-RT/VEHICLE/UAV-RT/curr_config.uavrt'  # file path to configuration file
 
 #############################################################################
 # Intializes UDP Receiving IP Port

@@ -5,7 +5,7 @@ import os
 ##########################################################################
 # Variables
 cwd = os.getcwd()  # Gets current directory, allows any user name to specified at setup
-log_path_prefix = cwd + '/UAV-RT/CURRENT_DATA/'
+log_path_prefix = cwd + '/UAV-RT/VEHICLE/UAV-RT/CURRENT_DATA/'
 
 ##########################################################################
 # Function

@@ -1,1 +1,0 @@
-This is just a folder that houses data during a flight. It is immediately transferred to the FLIGHT_DATA folder when the program stops. If a software or hardware failure occurs, which interrupts the main program, the most recent flight data would be found here. 

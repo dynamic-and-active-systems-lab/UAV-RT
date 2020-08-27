@@ -31,7 +31,7 @@ class gnu_script(gr.top_block):
         ##################################################
         cwd = os.getcwd()  # MODIFIED Gets current directory, allows any user name to specified when setting up UDOO
         log_path_username = cwd  # MODIFIED
-        self.prefix = prefix = log_path_username + "/UAV-RT/CURRENT_DATA/"  # MODIFIED this varible from the standard top block
+        self.prefix = prefix = log_path_username + "/UAV-RT/VEHICLE/UAV-RT/CURRENT_DATA/"  # MODIFIED this varible from the standard top block
         self.samp_rate = samp_rate = 2500000
         self.recfile = recfile = prefix + 'SDR - ' + datetime.now().strftime("%Y-%m-%d-T%H_%M_%S") + ".dat"
         self.gainRF = gainRF = 17.0
@@ -42,7 +42,7 @@ class gnu_script(gr.top_block):
         ##################################################
         # Blocks
         ##################################################
-        self.timesync_pixstream_source_0 = timesync.pixstream_source(log_path_username + '/UAV-RT/CURRENT_DATA')  # MODIFIED
+        self.timesync_pixstream_source_0 = timesync.pixstream_source(log_path_username + '/UAV-RT/VEHICLE/UAV-RT/CURRENT_DATA')  # MODIFIED
         self.rational_resampler_xxx_0_0 = filter.rational_resampler_ccc(
                 interpolation=audio_rate,
                 decimation=2500000,
