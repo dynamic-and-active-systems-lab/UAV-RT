@@ -1,0 +1,30 @@
+%This is an example configuration file for the UAV-RT System. Lines with
+%percentage marks are considered comment on the file and ignored by the parsing
+%algorithms. Each config file starts with system configuration settings
+%indicated by a //SYSCONF line. The lines after it need to specify the sampling
+%rate of the vehicle (Hz), the RF gain, the IF gain, and the BB gain in dB.
+%After the parameters of the tag being searched for are listed after the //TAGxx
+%indicator. The xx is used to specify the tag number in the list, ie. 01, 02,
+%etc. Then the tag carrier frequency (FT) in MHz is specified, as is the
+%sampling rate FRS (Hz), the expected pulse duration (s), and the expected
+%pulse repetition rate (period) (s). The end of the document can contain note
+%about the flight or search after the //NOTES line.
+
+//TS
+30-May-2019 08:47:23
+
+//SDRSYS
+FVEH	10
+RFG	7
+IFG	13
+BBG	10
+
+//TAG01
+FT	148.356
+FRS	48000
+PUL_D	0.02
+PUL_R	1.3
+
+
+//NOTES
+These are notes provided about the flight.

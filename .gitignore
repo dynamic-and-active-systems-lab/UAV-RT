@@ -2,3 +2,8 @@ Icon[]
 
 #the Matlab temporary files
 *.m~
+
+
+#USGS maps downloaded by the application. This will ignore any file with the USGS or _map string in the file name
+*USGS*
+*_map*

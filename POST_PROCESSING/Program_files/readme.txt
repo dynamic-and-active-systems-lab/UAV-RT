@@ -1,0 +1,1 @@
+This folder will be populated with directories when USGS maps are downloaded. Those changes will not be included to git commits, as files containing *USGS* and *_map* were added to the .gitignore file. 
