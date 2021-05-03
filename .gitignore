@@ -1,0 +1,4 @@
+Icon[]
+
+#the Matlab temporary files
+*.m~
